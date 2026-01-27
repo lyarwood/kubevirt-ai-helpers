@@ -1,6 +1,6 @@
 {
   "name": "kubevirt",
-  "description": "Core KubeVirt workflows for VM lifecycle debugging and component analysis",
+  "description": "Core KubeVirt development workflows for code review and linting",
   "version": "1.0.0",
   "author": {
     "name": "KubeVirt Contributors"

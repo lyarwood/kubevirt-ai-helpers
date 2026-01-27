@@ -337,7 +337,7 @@ When you identify a desirable characteristic (clarity, brevity, formality, humor
 
 - **Command files:** Use kebab-case: `vm-lifecycle-debug.md`
 - **Skill directories:** Use kebab-case: `analyze-must-gather/`
-- **Plugin names:** Use kebab-case: `kubevirt`, `virt-must-gather`
+- **Plugin names:** Use kebab-case: `kubevirt`, `hello-world`
 - **Working directories:** Use `.work/{feature-name}/` for temporary files (already in .gitignore)
 
 ## Common Patterns
@@ -421,8 +421,7 @@ Use consistent patterns for must-gather analysis:
 | Plugin | Purpose | Key Commands |
 |--------|---------|--------------|
 | `hello-world` | Reference implementation | `/hello-world:echo` |
-| `kubevirt` | VM lifecycle and component debugging | `/kubevirt:vm-lifecycle-debug`, `/kubevirt:analyze-virt-components`, `/kubevirt:vm-migration-debug` |
-| `virt-must-gather` | Must-gather analysis | `/virt-must-gather:analyze`, `/virt-must-gather:vm-failure` |
+| `kubevirt` | Code review and linting | `/kubevirt:review`, `/kubevirt:lint` |
 | `utils` | General utilities | (Placeholder for future commands) |
 
 ## Relationship with OpenShift AI Helpers

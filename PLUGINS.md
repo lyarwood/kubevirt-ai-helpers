@@ -4,7 +4,6 @@ This document lists all available Claude Code plugins and their commands in the 
 
 - [Hello World](#hello-world-plugin)
 - [Kubevirt](#kubevirt-plugin)
-- [Virt Must Gather](#virt-must-gather-plugin)
 
 ### Hello World Plugin
 
@@ -17,21 +16,10 @@ See [plugins/hello-world/README.md](plugins/hello-world/README.md) for detailed 
 
 ### Kubevirt Plugin
 
-Core KubeVirt workflows for VM lifecycle debugging and component analysis
+Core KubeVirt development workflows for code review and linting
 
 **Commands:**
-- **`/kubevirt:analyze-virt-components` `[namespace]`** - Analyze virt-handler, virt-launcher, and virt-controller logs
-- **`/kubevirt:vm-lifecycle-debug` `<vm-name> [namespace]`** - Debug VM creation, startup, and lifecycle issues
-- **`/kubevirt:vm-migration-debug` `<vm-name> [namespace]`** - Debug VM migration failures and issues
+- **`/kubevirt:lint` `<path>`** - Lint a path and generate a plan to fix issues with separate commits per linter
+- **`/kubevirt:review` `[base-branch]`** - Review local branch changes using KubeVirt project best practices
 
 See [plugins/kubevirt/README.md](plugins/kubevirt/README.md) for detailed documentation.
-
-### Virt Must Gather Plugin
-
-Analyze KubeVirt must-gather archives for VM diagnostics and troubleshooting
-
-**Commands:**
-- **`/virt-must-gather:analyze` `<path>`** - Analyze KubeVirt must-gather archives
-- **`/virt-must-gather:vm-failure` `<vm-name> <path>`** - Quick analysis of specific VM failure from must-gather
-
-See [plugins/virt-must-gather/README.md](plugins/virt-must-gather/README.md) for detailed documentation.

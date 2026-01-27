@@ -1,34 +1,25 @@
 # KubeVirt Plugin
 
-Core KubeVirt workflows for debugging VM lifecycle issues, analyzing virtualization components, and troubleshooting migrations.
+Core KubeVirt development workflows for code review and linting.
 
 ## Commands
 
-### `/kubevirt:vm-lifecycle-debug`
+### `/kubevirt:review`
 
-Debug VM creation, startup, shutdown, and lifecycle issues. Analyzes VM/VMI resources, virt-launcher pods, virt-handler logs, and virt-controller orchestration.
+Review local branch changes using KubeVirt project coding conventions and reviewer guidelines. Performs a multi-pass code review checking design, implementation details, and standards compliance.
 
 **Usage:**
 ```bash
-/kubevirt:vm-lifecycle-debug <vm-name> [namespace]
+/kubevirt:review [base-branch]
 ```
 
-### `/kubevirt:analyze-virt-components`
+### `/kubevirt:lint`
 
-Analyze health and logs of KubeVirt virtualization components (virt-controller, virt-handler, virt-launcher). Identifies component failures, resource issues, and configuration problems.
-
-**Usage:**
-```bash
-/kubevirt:analyze-virt-components [namespace]
-```
-
-### `/kubevirt:vm-migration-debug`
-
-Debug VM migration failures, timeouts, and performance issues. Analyzes migration resources, source/target node logs, network connectivity, and storage configuration.
+Lint a path in the KubeVirt codebase and generate a plan to fix all issues. Creates separate commits per linter type (formatting, error handling, static analysis, etc.) for easy review and bisection.
 
 **Usage:**
 ```bash
-/kubevirt:vm-migration-debug <vm-name> [namespace]
+/kubevirt:lint <path>
 ```
 
 ## Installation
@@ -39,19 +30,15 @@ Debug VM migration failures, timeouts, and performance issues. Analyzes migratio
 
 ## Common Workflows
 
-### Troubleshooting a VM that won't start
+### Reviewing changes before submitting a PR
 ```bash
-/kubevirt:vm-lifecycle-debug my-vm production
+git checkout feature/my-new-feature
+/kubevirt:review main
 ```
 
-### Investigating cluster-wide virtualization issues
+### Linting code before committing
 ```bash
-/kubevirt:analyze-virt-components kubevirt
-```
-
-### Debugging a failed live migration
-```bash
-/kubevirt:vm-migration-debug my-vm production
+/kubevirt:lint pkg/virt-controller/watch
 ```
 
 ## See Also

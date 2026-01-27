@@ -1,8 +1,0 @@
-{
-  "name": "virt-must-gather",
-  "description": "Analyze KubeVirt must-gather archives for VM diagnostics and troubleshooting",
-  "version": "1.0.0",
-  "author": {
-    "name": "KubeVirt Contributors"
-  }
-}
