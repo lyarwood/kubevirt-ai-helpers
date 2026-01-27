@@ -1,0 +1,81 @@
+{
+  "name": "kubevirt-ai-helpers",
+  "owner": "kubevirt",
+  "plugins": [
+    {
+      "name": "hello-world",
+      "description": "Hello World Plugin",
+      "version": "1.0.0",
+      "commands": [
+        {
+          "name": "echo",
+          "description": "Hello world plugin implementation",
+          "synopsis": "/hello-world:echo [name]",
+          "argument_hint": "[name]"
+        }
+      ],
+      "skills": [],
+      "hooks": [],
+      "has_readme": true
+    },
+    {
+      "name": "kubevirt",
+      "description": "Core KubeVirt workflows for VM lifecycle debugging and component analysis",
+      "version": "1.0.0",
+      "commands": [
+        {
+          "name": "analyze-virt-components",
+          "description": "Analyze virt-handler, virt-launcher, and virt-controller logs",
+          "synopsis": "/kubevirt:analyze-virt-components [namespace]",
+          "argument_hint": "[namespace]"
+        },
+        {
+          "name": "vm-lifecycle-debug",
+          "description": "Debug VM creation, startup, and lifecycle issues",
+          "synopsis": "/kubevirt:vm-lifecycle-debug <vm-name> [namespace]",
+          "argument_hint": "<vm-name> [namespace]"
+        },
+        {
+          "name": "vm-migration-debug",
+          "description": "Debug VM migration failures and issues",
+          "synopsis": "/kubevirt:vm-migration-debug <vm-name> [namespace]",
+          "argument_hint": "<vm-name> [namespace]"
+        }
+      ],
+      "skills": [],
+      "hooks": [],
+      "has_readme": true
+    },
+    {
+      "name": "virt-must-gather",
+      "description": "Analyze KubeVirt must-gather archives for VM diagnostics and troubleshooting",
+      "version": "1.0.0",
+      "commands": [
+        {
+          "name": "analyze",
+          "description": "Analyze KubeVirt must-gather archives",
+          "synopsis": "/virt-must-gather:analyze <path>",
+          "argument_hint": "<path>"
+        },
+        {
+          "name": "vm-failure",
+          "description": "Quick analysis of specific VM failure from must-gather",
+          "synopsis": "/virt-must-gather:vm-failure <vm-name> <path>",
+          "argument_hint": "<vm-name> <path>"
+        }
+      ],
+      "skills": [],
+      "hooks": [],
+      "has_readme": true
+    },
+    {
+      "name": "utils",
+      "description": "A generic utilities plugin serving as a catch-all for various helper commands",
+      "version": "1.0.0",
+      "commands": [],
+      "skills": [],
+      "hooks": [],
+      "has_readme": true
+    }
+  ]
+}

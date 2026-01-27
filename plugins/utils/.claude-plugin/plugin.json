@@ -1,0 +1,8 @@
+{
+  "name": "utils",
+  "description": "A generic utilities plugin serving as a catch-all for various helper commands",
+  "version": "1.0.0",
+  "author": {
+    "name": "KubeVirt Contributors"
+  }
+}

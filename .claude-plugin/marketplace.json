@@ -1,0 +1,28 @@
+{
+  "name": "kubevirt-ai-helpers",
+  "owner": {
+    "name": "kubevirt"
+  },
+  "plugins": [
+    {
+      "name": "hello-world",
+      "source": "./plugins/hello-world",
+      "description": "Hello World Plugin"
+    },
+    {
+      "name": "kubevirt",
+      "source": "./plugins/kubevirt",
+      "description": "Core KubeVirt workflows for VM lifecycle debugging and component analysis"
+    },
+    {
+      "name": "virt-must-gather",
+      "source": "./plugins/virt-must-gather",
+      "description": "Analyze KubeVirt must-gather archives for VM diagnostics and troubleshooting"
+    },
+    {
+      "name": "utils",
+      "source": "./plugins/utils",
+      "description": "A generic utilities plugin serving as a catch-all for various helper commands"
+    }
+  ]
+}
