@@ -12,7 +12,7 @@ This project provides Claude Code plugins for KubeVirt development, including co
 
 1. **Add the marketplace:**
    ```bash
-   /plugin marketplace add kubevirt/kubevirt-ai-helpers
+   /plugin marketplace add lyarwood/kubevirt-ai-helpers
    ```
 
 2. **Install a plugin:**
@@ -24,6 +24,7 @@ This project provides Claude Code plugins for KubeVirt development, including co
    ```bash
    /kubevirt:review
    /kubevirt:lint pkg/virt-controller/watch
+   /kubevirt:vep-list --release 1.9
    ```
 
 ## Related Helpers
@@ -51,7 +52,7 @@ Use KubeVirt AI Helpers for:
 ```bash
 # Add both marketplaces
 /plugin marketplace add openshift-eng/ai-helpers
-/plugin marketplace add kubevirt/kubevirt-ai-helpers
+/plugin marketplace add lyarwood/kubevirt-ai-helpers
 
 # Install plugins from both
 /plugin install jira@ai-helpers
