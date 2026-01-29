@@ -26,20 +26,25 @@ Lint a path in the KubeVirt codebase and generate a plan to fix all issues. Crea
 
 ### VEP Management
 
-Commands for working with KubeVirt Enhancement Proposals (VEPs) in the [kubevirt/enhancements](https://github.com/kubevirt/enhancements) repository.
+Commands for working with KubeVirt Enhancement Proposals (VEPs) in the [kubevirt/enhancements](https://github.com/kubevirt/enhancements) repository and [KubeVirt Enhancement Tracking Projects](https://github.com/orgs/kubevirt/projects).
+
+These commands integrate data from:
+- **kubevirt/enhancements**: VEP proposals and tracking issues
+- **GitHub Projects**: Release-specific enhancement tracking (status, target stage, promotion phase)
+- **kubevirt/kubevirt**: Implementation PRs
 
 #### `/kubevirt:vep-list`
 
-List open VEPs with status, SIG ownership, and key labels. Helps maintainers track enhancement activity.
+List VEPs with release tracking status, SIG ownership, and project data. Filter by SIG, release, or status.
 
 **Usage:**
 ```bash
-/kubevirt:vep-list [--sig <sig>] [--state <state>]
+/kubevirt:vep-list [--sig <sig>] [--release <version>] [--status <status>]
 ```
 
 #### `/kubevirt:vep-summary`
 
-Get a TL;DR summary of a specific VEP including its current state, motivation, key design points, and implementation progress.
+Get a TL;DR summary of a specific VEP including release tracking data, ownership, progress across phases, and next steps.
 
 **Usage:**
 ```bash
@@ -48,7 +53,7 @@ Get a TL;DR summary of a specific VEP including its current state, motivation, k
 
 #### `/kubevirt:vep-groom`
 
-Review a VEP proposal PR against template requirements and process guidelines. Identifies missing sections, incomplete content, and compliance issues.
+Review a VEP proposal PR against template requirements, process guidelines, and release tracking. Checks tracking issue quality and project board status.
 
 **Usage:**
 ```bash

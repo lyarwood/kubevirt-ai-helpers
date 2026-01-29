@@ -44,8 +44,8 @@
         {
           "name": "vep-list",
           "description": "List open KubeVirt Enhancement Proposals (VEPs) with status and filtering",
-          "synopsis": "/kubevirt:vep-list [--sig <sig>] [--state <state>]",
-          "argument_hint": "[--sig <sig>] [--state <state>]"
+          "synopsis": "/kubevirt:vep-list [--sig <sig>] [--release <version>] [--status <status>]",
+          "argument_hint": "[--sig <sig>] [--release <version>] [--status <status>]"
         },
         {
           "name": "vep-summary",
