@@ -1,10 +1,12 @@
 # KubeVirt Plugin
 
-Core KubeVirt development workflows for code review and linting.
+KubeVirt development workflows for code review, linting, and enhancement proposals (VEPs).
 
 ## Commands
 
-### `/kubevirt:review`
+### Code Quality
+
+#### `/kubevirt:review`
 
 Review local branch changes using KubeVirt project coding conventions and reviewer guidelines. Performs a multi-pass code review checking design, implementation details, and standards compliance.
 
@@ -13,13 +15,44 @@ Review local branch changes using KubeVirt project coding conventions and review
 /kubevirt:review [base-branch]
 ```
 
-### `/kubevirt:lint`
+#### `/kubevirt:lint`
 
 Lint a path in the KubeVirt codebase and generate a plan to fix all issues. Creates separate commits per linter type (formatting, error handling, static analysis, etc.) for easy review and bisection.
 
 **Usage:**
 ```bash
 /kubevirt:lint <path>
+```
+
+### VEP Management
+
+Commands for working with KubeVirt Enhancement Proposals (VEPs) in the [kubevirt/enhancements](https://github.com/kubevirt/enhancements) repository.
+
+#### `/kubevirt:vep-list`
+
+List open VEPs with status, SIG ownership, and key labels. Helps maintainers track enhancement activity.
+
+**Usage:**
+```bash
+/kubevirt:vep-list [--sig <sig>] [--state <state>]
+```
+
+#### `/kubevirt:vep-summary`
+
+Get a TL;DR summary of a specific VEP including its current state, motivation, key design points, and implementation progress.
+
+**Usage:**
+```bash
+/kubevirt:vep-summary <vep-number>
+```
+
+#### `/kubevirt:vep-groom`
+
+Review a VEP proposal PR against template requirements and process guidelines. Identifies missing sections, incomplete content, and compliance issues.
+
+**Usage:**
+```bash
+/kubevirt:vep-groom <vep-pr-number>
 ```
 
 ## Installation
@@ -39,6 +72,21 @@ git checkout feature/my-new-feature
 ### Linting code before committing
 ```bash
 /kubevirt:lint pkg/virt-controller/watch
+```
+
+### Checking open VEPs for a SIG meeting
+```bash
+/kubevirt:vep-list --sig compute
+```
+
+### Understanding a VEP before reviewing
+```bash
+/kubevirt:vep-summary 190
+```
+
+### Grooming a VEP proposal
+```bash
+/kubevirt:vep-groom 191
 ```
 
 ## See Also

@@ -21,7 +21,7 @@
     {
       "name": "kubevirt",
       "description": "Core KubeVirt workflows for VM lifecycle debugging and component analysis",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "commands": [
         {
           "name": "lint",
@@ -34,6 +34,24 @@
           "description": "Review local branch changes using KubeVirt project best practices",
           "synopsis": "/kubevirt:review [base-branch]",
           "argument_hint": "[base-branch]"
+        },
+        {
+          "name": "vep-groom",
+          "description": "Review a VEP proposal against template requirements and process guidelines",
+          "synopsis": "/kubevirt:vep-groom <vep-pr-number>",
+          "argument_hint": "<vep-pr-number>"
+        },
+        {
+          "name": "vep-list",
+          "description": "List open KubeVirt Enhancement Proposals (VEPs) with status and filtering",
+          "synopsis": "/kubevirt:vep-list [--sig <sig>] [--state <state>]",
+          "argument_hint": "[--sig <sig>] [--state <state>]"
+        },
+        {
+          "name": "vep-summary",
+          "description": "Get a TL;DR summary of a specific VEP and its current state",
+          "synopsis": "/kubevirt:vep-summary <vep-number>",
+          "argument_hint": "<vep-number>"
         }
       ],
       "skills": [],

@@ -44,6 +44,7 @@ Use OpenShift AI Helpers for:
 Use KubeVirt AI Helpers for:
 - **Code review**: Review local branch changes using KubeVirt project best practices
 - **Linting**: Run golangci-lint and generate a plan to fix issues with separate commits per linter
+- **VEP management**: List, summarize, and groom KubeVirt Enhancement Proposals (VEPs)
 
 ### Using Both Together
 
