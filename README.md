@@ -1,10 +1,10 @@
 # KubeVirt AI Helpers
 
-A collection of Claude Code plugins to automate and assist with KubeVirt virtualization workflows.
+A collection of Claude Code plugins to automate and assist with KubeVirt development workflows.
 
 ## Overview
 
-This project focuses exclusively on KubeVirt virtualization workflows, including VM lifecycle debugging, virtualization component analysis, and KubeVirt must-gather diagnostics. For general Kubernetes, CI/CD, and development workflows, use the [OpenShift AI Helpers](https://github.com/openshift-eng/ai-helpers).
+This project provides Claude Code plugins for KubeVirt development, including code review and linting workflows. For general Kubernetes, CI/CD, and development workflows, use the [OpenShift AI Helpers](https://github.com/openshift-eng/ai-helpers).
 
 ## Installation
 
@@ -22,7 +22,8 @@ This project focuses exclusively on KubeVirt virtualization workflows, including
 
 3. **Use the commands:**
    ```bash
-   /kubevirt:vm-lifecycle-debug my-vm default
+   /kubevirt:review
+   /kubevirt:lint pkg/virt-controller/watch
    ```
 
 ## Related Helpers
@@ -41,10 +42,8 @@ Use OpenShift AI Helpers for:
 ### When to Use KubeVirt AI Helpers
 
 Use KubeVirt AI Helpers for:
-- **VM lifecycle debugging**: Analyze VM creation, startup, and lifecycle issues
-- **Virtualization component analysis**: Investigate virt-handler, virt-launcher, virt-controller logs
-- **VM migration debugging**: Troubleshoot VM migration failures
-- **KubeVirt must-gather analysis**: Analyze KubeVirt-specific diagnostics archives
+- **Code review**: Review local branch changes using KubeVirt project best practices
+- **Linting**: Run golangci-lint and generate a plan to fix issues with separate commits per linter
 
 ### Using Both Together
 
@@ -59,7 +58,7 @@ Use KubeVirt AI Helpers for:
 
 # Use commands from both
 /jira:solve OCPBUGS-12345 origin
-/kubevirt:vm-lifecycle-debug my-vm default
+/kubevirt:review
 ```
 
 ## Available Plugins
