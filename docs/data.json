@@ -30,6 +30,12 @@
           "argument_hint": "<path>"
         },
         {
+          "name": "review-ci",
+          "description": "Review CI failures for a given PR and provide analysis with remediation suggestions",
+          "synopsis": "/kubevirt:review-ci <pr-number-or-url>",
+          "argument_hint": "<pr-number-or-url>"
+        },
+        {
           "name": "review",
           "description": "Review local branch changes using KubeVirt project best practices",
           "synopsis": "/kubevirt:review [base-branch]",

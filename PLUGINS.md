@@ -20,6 +20,7 @@ KubeVirt development workflows for code review, linting, and enhancement proposa
 
 **Commands:**
 - **`/kubevirt:lint` `<path>`** - Lint a path and generate a plan to fix issues with separate commits per linter
+- **`/kubevirt:review-ci` `<pr-number-or-url>`** - Review CI failures for a given PR and provide analysis with remediation suggestions
 - **`/kubevirt:review` `[base-branch]`** - Review local branch changes using KubeVirt project best practices
 - **`/kubevirt:vep-groom` `<vep-pr-number>`** - Review a VEP proposal against template requirements and process guidelines
 - **`/kubevirt:vep-list` `[--sig <sig>] [--release <version>] [--status <status>]`** - List open KubeVirt Enhancement Proposals (VEPs) with status and filtering

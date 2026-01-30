@@ -24,6 +24,7 @@ This project provides Claude Code plugins for KubeVirt development, including co
    ```bash
    /kubevirt:review
    /kubevirt:lint pkg/virt-controller/watch
+   /kubevirt:review-ci 12345
    /kubevirt:vep-list --release 1.9
    ```
 
@@ -44,6 +45,7 @@ Use OpenShift AI Helpers for:
 
 Use KubeVirt AI Helpers for:
 - **Code review**: Review local branch changes using KubeVirt project best practices
+- **CI analysis**: Analyze CI failures for PRs with root cause identification and remediation suggestions
 - **Linting**: Run golangci-lint and generate a plan to fix issues with separate commits per linter
 - **VEP management**: List, summarize, and groom KubeVirt Enhancement Proposals (VEPs)
 
