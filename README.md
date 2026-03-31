@@ -69,6 +69,20 @@ Use KubeVirt AI Helpers for:
 
 For a complete list of all available plugins and commands, see **[PLUGINS.md](PLUGINS.md)**.
 
+## Ambient Workflows
+
+These commands are also available as [Ambient Code Platform](https://github.com/ambient-code) workflows. When creating an Ambient session, attach a workflow from this repository:
+
+```
+workflow_git_url: https://github.com/lyarwood/kubevirt-ai-helpers.git
+workflow_path: workflows/kubevirt-review
+workflow_branch: main
+```
+
+Available workflows: `kubevirt-review`, `kubevirt-lint`, `kubevirt-review-ci`, `kubevirt-vep-list`, `kubevirt-vep-summary`, `kubevirt-vep-groom`.
+
+See **[workflows/README.md](workflows/README.md)** for details.
+
 ## Plugin Development
 
 Want to contribute or create your own plugins? Check out the `plugins/` directory for examples.
@@ -139,6 +153,7 @@ This automatically scans all plugins and regenerates the complete plugin/command
 ## Additional Documentation
 
 - **[PLUGINS.md](PLUGINS.md)** - Complete list of all available plugins and commands (auto-generated)
+- **[workflows/README.md](workflows/README.md)** - Ambient Code Platform workflow documentation
 - **[AGENTS.md](AGENTS.md)** - Complete guide for AI agents working with this repository
 
 ## License
