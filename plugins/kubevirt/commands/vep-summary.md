@@ -43,10 +43,12 @@ The `kubevirt:vep-summary` command provides a concise TL;DR summary of a specifi
 
 ## Implementation
 
-1. **Find VEP in Projects**: Search enhancement tracking projects for the VEP:
+1. **Find VEP in Projects**: Discover enhancement tracking projects dynamically, then search for the VEP:
    ```bash
-   gh project item-list 19 --owner kubevirt --format json | jq '.items[] | select(.title | contains("VEP <number>"))'
-   gh project item-list 21 --owner kubevirt --format json | jq '.items[] | select(.title | contains("VEP <number>"))'
+   # Discover enhancement tracking projects
+   gh project list --owner kubevirt --format json | jq '.projects[] | select(.title | contains("Enhancement"))'
+   # Search each matching project for the VEP
+   gh project item-list <project-number> --owner kubevirt --format json | jq '.items[] | select(.title | contains("VEP <number>"))'
    ```
 
 2. **Fetch Tracking Issue**: Get the VEP tracking issue:

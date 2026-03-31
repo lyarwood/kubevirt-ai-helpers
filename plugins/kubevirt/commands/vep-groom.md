@@ -101,10 +101,12 @@ Issues are categorized by severity:
    gh issue view <vep-number> --repo kubevirt/enhancements --json number,title,body,labels,assignees,url
    ```
 
-5. **Check Project Tracking**: Search for VEP in enhancement tracking projects:
+5. **Check Project Tracking**: Discover enhancement tracking projects dynamically, then search for the VEP:
    ```bash
-   gh project item-list 21 --owner kubevirt --format json | jq '.items[] | select(.title | contains("VEP <number>"))'
-   gh project item-list 19 --owner kubevirt --format json | jq '.items[] | select(.title | contains("VEP <number>"))'
+   # Discover enhancement tracking projects
+   gh project list --owner kubevirt --format json | jq '.projects[] | select(.title | contains("Enhancement"))'
+   # Search each matching project for the VEP
+   gh project item-list <project-number> --owner kubevirt --format json | jq '.items[] | select(.title | contains("VEP <number>"))'
    ```
 
 6. **Parse Template Sections**: Check each required section in the VEP:

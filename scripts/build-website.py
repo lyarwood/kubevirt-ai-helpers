@@ -10,18 +10,7 @@ import re
 from pathlib import Path
 from typing import Dict, List
 
-def parse_frontmatter(content: str) -> Dict[str, str]:
-    """Extract frontmatter from markdown file"""
-    frontmatter = {}
-    if content.startswith('---'):
-        parts = content.split('---', 2)
-        if len(parts) >= 2:
-            fm_lines = parts[1].strip().split('\n')
-            for line in fm_lines:
-                if ':' in line:
-                    key, value = line.split(':', 1)
-                    frontmatter[key.strip()] = value.strip()
-    return frontmatter
+from plugin_utils import parse_frontmatter
 
 def extract_synopsis(content: str) -> str:
     """Extract synopsis from command markdown"""

@@ -195,13 +195,13 @@ All plugins must be registered in `.claude-plugin/marketplace.json`:
 
 ```bash
 # Add the marketplace
-/plugin marketplace add kubevirt/kubevirt-ai-helpers
+/plugin marketplace add lyarwood/kubevirt-ai-helpers
 
 # Install a specific plugin
 /plugin install kubevirt@kubevirt-ai-helpers
 
 # Use the command
-/kubevirt:vm-lifecycle-debug my-vm default
+/kubevirt:review
 ```
 
 ## Contributing New Plugins or Commands
@@ -421,8 +421,7 @@ Use consistent patterns for must-gather analysis:
 | Plugin | Purpose | Key Commands |
 |--------|---------|--------------|
 | `hello-world` | Reference implementation | `/hello-world:echo` |
-| `kubevirt` | Code review and linting | `/kubevirt:review`, `/kubevirt:lint` |
-| `utils` | General utilities | (Placeholder for future commands) |
+| `kubevirt` | Code review, linting, CI analysis, and VEP management | `/kubevirt:review`, `/kubevirt:lint`, `/kubevirt:review-ci`, `/kubevirt:vep-list`, `/kubevirt:vep-summary`, `/kubevirt:vep-groom` |
 
 ## Relationship with OpenShift AI Helpers
 
@@ -436,10 +435,10 @@ This project focuses exclusively on KubeVirt virtualization workflows. For gener
 - Session management: `/session:save-session`
 
 **When to use KubeVirt AI Helpers:**
-- VM lifecycle debugging
-- Virtualization component analysis
-- KubeVirt must-gather analysis
-- VM migration troubleshooting
+- Code review using KubeVirt project best practices
+- CI failure analysis for KubeVirt PRs
+- Linting with golangci-lint and automated fix commits
+- VEP (KubeVirt Enhancement Proposal) management: listing, summarizing, and grooming
 
 ## Additional Resources
 

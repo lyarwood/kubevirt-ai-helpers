@@ -17,11 +17,7 @@ The `kubevirt:vep-list` command lists KubeVirt Enhancement Proposals (VEPs) from
 ### Data Sources
 
 1. **kubevirt/enhancements repository**: Issues and PRs containing VEP proposals
-2. **KubeVirt Enhancement Tracking Projects**: GitHub Projects that track VEPs per release
-   - Project 21: KubeVirt 1.9 Enhancements Tracking
-   - Project 19: KubeVirt 1.8 Enhancements Tracking
-   - Project 18: KubeVirt 1.7 Enhancements Tracking
-   - Project 15: KubeVirt 1.6 Enhancements Tracking
+2. **KubeVirt Enhancement Tracking Projects**: GitHub Projects that track VEPs per release (discovered dynamically via `gh project list --owner kubevirt`)
 
 ### What it Shows
 For each VEP, the command displays:
@@ -107,5 +103,4 @@ A formatted list of VEPs with:
 - `/kubevirt:vep-summary` - Get detailed summary of a specific VEP
 - `/kubevirt:vep-groom` - Review a VEP proposal against requirements
 - [KubeVirt Enhancements Repository](https://github.com/kubevirt/enhancements)
-- [KubeVirt 1.8 Enhancements Project](https://github.com/orgs/kubevirt/projects/19)
-- [KubeVirt 1.9 Enhancements Project](https://github.com/orgs/kubevirt/projects/21)
+- [KubeVirt Enhancement Tracking Projects](https://github.com/orgs/kubevirt/projects)

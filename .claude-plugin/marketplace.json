@@ -12,12 +12,7 @@
     {
       "name": "kubevirt",
       "source": "./plugins/kubevirt",
-      "description": "Core KubeVirt workflows for VM lifecycle debugging and component analysis"
-    },
-    {
-      "name": "utils",
-      "source": "./plugins/utils",
-      "description": "A generic utilities plugin serving as a catch-all for various helper commands"
+      "description": "Core KubeVirt workflows for code review, linting, CI analysis, and VEP management"
     }
   ]
 }
