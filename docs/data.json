@@ -20,8 +20,8 @@
     },
     {
       "name": "kubevirt",
-      "description": "Core KubeVirt workflows for VM lifecycle debugging and component analysis",
-      "version": "1.1.0",
+      "description": "Core KubeVirt workflows for code review, linting, CI analysis, and VEP management",
+      "version": "1.2.0",
       "commands": [
         {
           "name": "lint",
@@ -60,15 +60,6 @@
           "argument_hint": "<vep-number>"
         }
       ],
-      "skills": [],
-      "hooks": [],
-      "has_readme": true
-    },
-    {
-      "name": "utils",
-      "description": "A generic utilities plugin serving as a catch-all for various helper commands",
-      "version": "1.0.0",
-      "commands": [],
       "skills": [],
       "hooks": [],
       "has_readme": true

@@ -8,10 +8,11 @@ and generates a markdown documentation section listing all available plugins and
 
 import json
 import os
-import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import List
+
+from plugin_utils import parse_frontmatter
 
 
 class PluginInfo:
@@ -30,25 +31,6 @@ class PluginInfo:
             'description': description,
             'argument_hint': argument_hint
         })
-
-
-def parse_frontmatter(content: str) -> Dict[str, str]:
-    """Parse YAML frontmatter from a markdown file."""
-    frontmatter = {}
-    
-    # Match frontmatter between --- markers
-    match = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
-    if match:
-        frontmatter_text = match.group(1)
-        
-        # Parse simple YAML key-value pairs
-        for line in frontmatter_text.split('\n'):
-            line = line.strip()
-            if ':' in line:
-                key, value = line.split(':', 1)
-                frontmatter[key.strip()] = value.strip()
-    
-    return frontmatter
 
 
 def get_plugin_info(plugin_dir: Path) -> PluginInfo:
