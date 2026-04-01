@@ -1,6 +1,6 @@
 # KubeVirt Plugin
 
-KubeVirt development workflows for code review, linting, and enhancement proposals (VEPs).
+KubeVirt development workflows for code review, PR review, linting, CI analysis, and enhancement proposals (VEPs).
 
 ## Commands
 
@@ -13,6 +13,15 @@ Review local branch changes using KubeVirt project coding conventions and review
 **Usage:**
 ```bash
 /kubevirt:review [base-branch]
+```
+
+#### `/kubevirt:review-pr`
+
+Review a GitHub pull request using the `gh` CLI, applying KubeVirt project coding conventions and reviewer guidelines. Fetches PR diff, metadata, commit history, and existing discussion directly from GitHub without requiring a local checkout. Optionally submit the review as a comment on the PR.
+
+**Usage:**
+```bash
+/kubevirt:review-pr <pr-number-or-url> [--submit] [--approve] [--request-changes]
 ```
 
 #### `/kubevirt:lint`
@@ -67,6 +76,16 @@ Review a VEP proposal PR against template requirements, process guidelines, and 
 ```
 
 ## Common Workflows
+
+### Reviewing a GitHub PR
+```bash
+/kubevirt:review-pr 12345
+```
+
+### Reviewing and submitting feedback on a PR
+```bash
+/kubevirt:review-pr https://github.com/kubevirt/kubevirt/pull/12345 --submit
+```
 
 ### Reviewing changes before submitting a PR
 ```bash
