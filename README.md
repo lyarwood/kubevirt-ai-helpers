@@ -45,7 +45,10 @@ Use OpenShift AI Helpers for:
 
 Use KubeVirt AI Helpers for:
 - **Code review**: Review local branch changes using KubeVirt project best practices
-- **CI analysis**: Analyze CI failures for PRs with root cause identification and remediation suggestions
+- **PR CI analysis**: Analyze CI failures for specific PRs with root cause identification and remediation suggestions
+- **CI health monitoring**: Track overall CI stability, analyze job lanes, and search for failure patterns
+- **Intelligent CI triage**: AI-powered root cause analysis with prioritized recommendations
+- **CI reporting**: Generate comprehensive health reports for stakeholders
 - **Linting**: Run golangci-lint and generate a plan to fix issues with separate commits per linter
 - **VEP management**: List, summarize, and groom KubeVirt Enhancement Proposals (VEPs)
 
@@ -69,6 +72,29 @@ Use KubeVirt AI Helpers for:
 
 For a complete list of all available plugins and commands, see **[PLUGINS.md](PLUGINS.md)**.
 
+## Prerequisites
+
+### Healthcheck Tool (for CI analysis commands)
+
+The CI analysis commands (`/kubevirt:ci-*`) require the [healthcheck](https://github.com/lyarwood/healthcheck) CLI tool:
+
+```bash
+# Clone and build healthcheck
+git clone https://github.com/lyarwood/healthcheck.git
+cd healthcheck
+go build
+sudo mv healthcheck /usr/local/bin/
+
+# Verify installation
+healthcheck --help
+```
+
+The healthcheck tool provides:
+- Live Prow data crawling for job lane analysis
+- Aggregated ci-health data for quick overviews
+- Search capabilities via search.ci.kubevirt.io
+- Optional MCP server for advanced AI-powered analysis
+
 ## Ambient Workflows
 
 These commands are also available as [Ambient Code Platform](https://github.com/ambient-code) workflows. When creating an Ambient session, attach a workflow from this repository:
@@ -79,7 +105,7 @@ workflow_path: workflows/kubevirt-review
 workflow_branch: main
 ```
 
-Available workflows: `kubevirt-review`, `kubevirt-lint`, `kubevirt-review-ci`, `kubevirt-vep-list`, `kubevirt-vep-summary`, `kubevirt-vep-groom`.
+Available workflows: `kubevirt-review`, `kubevirt-lint`, `kubevirt-review-ci`, `kubevirt-vep-list`, `kubevirt-vep-summary`, `kubevirt-vep-groom`, `kubevirt-ci-lane`, `kubevirt-ci-health`, `kubevirt-ci-search`, `kubevirt-ci-triage`, `kubevirt-ci-report`.
 
 See **[workflows/README.md](workflows/README.md)** for details.
 

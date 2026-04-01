@@ -21,8 +21,38 @@
     {
       "name": "kubevirt",
       "description": "Core KubeVirt workflows for code review, linting, CI analysis, and VEP management",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "commands": [
+        {
+          "name": "ci-health",
+          "description": "Analyze overall CI health across merge-time jobs with failure trending",
+          "synopsis": "/kubevirt:ci-health [category] [--since <period>]",
+          "argument_hint": "[category] [--since <period>]"
+        },
+        {
+          "name": "ci-lane",
+          "description": "Analyze recent runs and failure patterns for a specific CI job lane",
+          "synopsis": "/kubevirt:ci-lane <job-name> [--since <period>] [--type <job-type>]",
+          "argument_hint": "<job-name> [--since <period>]"
+        },
+        {
+          "name": "ci-report",
+          "description": "Generate comprehensive CI health reports for stakeholders",
+          "synopsis": "/kubevirt:ci-report [--scope <scope>] [--format <format>] [--recipient <audience>]",
+          "argument_hint": "[--scope <scope>] [--format <format>]"
+        },
+        {
+          "name": "ci-search",
+          "description": "Search for specific test failures and patterns across all CI jobs",
+          "synopsis": "/kubevirt:ci-search <pattern> [--max-age <period>] [--job <regex>] [--exclude-job <regex>]",
+          "argument_hint": "<pattern> [--max-age <period>] [--job <regex>]"
+        },
+        {
+          "name": "ci-triage",
+          "description": "Intelligent CI failure triage with root cause analysis and prioritized recommendations",
+          "synopsis": "/kubevirt:ci-triage <job-or-category> [--context <context>] [--deep-analysis]",
+          "argument_hint": "<job-or-category> [--context <context>]"
+        },
         {
           "name": "lint",
           "description": "Lint a path and generate a plan to fix issues with separate commits per linter",

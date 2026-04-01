@@ -12,6 +12,11 @@ These workflows wrap the KubeVirt Claude Code plugin commands for use on the [Am
 | `kubevirt-vep-list` | List VEPs with filtering by SIG, release, or status |
 | `kubevirt-vep-summary` | Get a TL;DR summary of a specific VEP |
 | `kubevirt-vep-groom` | Review a VEP PR against template and process requirements |
+| `kubevirt-ci-lane` | Analyze specific CI job lane with failure patterns and statistics |
+| `kubevirt-ci-health` | Quick overview of CI health across all merge-time jobs |
+| `kubevirt-ci-search` | Search for specific test failures across all CI jobs |
+| `kubevirt-ci-triage` | Intelligent CI failure triage with root cause analysis |
+| `kubevirt-ci-report` | Generate comprehensive CI health reports for stakeholders |
 
 ## Usage
 
@@ -64,3 +69,8 @@ These workflows are Ambient-native wrappers around the same commands available a
 | `kubevirt-vep-list` | `/kubevirt:vep-list` |
 | `kubevirt-vep-summary` | `/kubevirt:vep-summary` |
 | `kubevirt-vep-groom` | `/kubevirt:vep-groom` |
+| `kubevirt-ci-lane` | `/kubevirt:ci-lane` |
+| `kubevirt-ci-health` | `/kubevirt:ci-health` |
+| `kubevirt-ci-search` | `/kubevirt:ci-search` |
+| `kubevirt-ci-triage` | `/kubevirt:ci-triage` |
+| `kubevirt-ci-report` | `/kubevirt:ci-report` |
