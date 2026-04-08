@@ -278,15 +278,27 @@ make lint
 - Before committing changes
 - To diagnose structural issues
 
+### Version Management
+
+The plugin version is the single source of truth in `plugins/{plugin-name}/.claude-plugin/plugin.json`. The version in `docs/data.json` is **generated** from `plugin.json` by `make update` and must never be edited directly.
+
+**When bumping a plugin version:**
+
+1. Update the `version` field in `plugins/{plugin-name}/.claude-plugin/plugin.json`
+2. Run `make update` to regenerate `docs/data.json` and `PLUGINS.md`
+3. Commit both the `plugin.json` change and the regenerated files together
+
+**Never** commit a `plugin.json` version bump without also regenerating and committing `docs/data.json` — this causes version skew that is confusing to reviewers and users.
+
 ### Updating Documentation
 
-After adding or modifying plugins, regenerate the documentation:
+After adding or modifying plugins (including version bumps), regenerate the documentation:
 
 ```bash
 make update
 ```
 
-This regenerates `PLUGINS.md` and `docs/data.json` from plugin metadata.
+This regenerates `PLUGINS.md` and `docs/data.json` from plugin metadata. **Always run this before committing changes to plugin structure or metadata.**
 
 ## Best Practices for AI Agents
 
