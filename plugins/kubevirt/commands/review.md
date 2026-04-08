@@ -20,6 +20,7 @@ This command simulates a thorough code review following the KubeVirt multi-pass 
 1. **General Design Pass**: Verify the overall design makes sense and code structure is consistent with the project
 2. **Detailed Code Pass**: In-depth analysis of the implementation
 3. **Standards Compliance Pass**: Check adherence to KubeVirt coding conventions
+4. **Commit History Pass**: Review commit structure and messages
 
 ### Review Checklist
 The review evaluates changes against KubeVirt's established standards:
@@ -83,18 +84,47 @@ The review evaluates changes against KubeVirt's established standards:
 - Dependencies should be well-maintained with active repositories
 
 ## Implementation
+
+### Phase 1: Gather Changes
 1. Determine the base branch (defaults to `main`, falls back to `master`)
 2. Run `git diff <base-branch>...HEAD` to get all changes on the current branch
 3. Run `git log <base-branch>...HEAD` to understand commit history and structure
-4. Analyze each changed file against KubeVirt conventions:
-   - Read the full diff for each file
-   - Consider the context of surrounding code
-   - Evaluate against the review checklist
-5. Generate structured feedback organized by:
+4. For large changesets, prioritize reviewing:
+   - API changes (`staging/src/kubevirt.io/api/`)
+   - Core logic changes (`pkg/`)
+   - Test changes (`tests/`)
+   - Generated code changes (flag but don't deeply review)
+
+### Phase 2: Analyze Changes (Multi-Pass)
+1. Perform the multi-pass review against the diff:
+   - **General Design Pass**: Overall design and architecture
+   - **Detailed Code Pass**: Line-by-line implementation review, considering context of surrounding code
+   - **Standards Compliance Pass**: KubeVirt coding conventions
+2. For each issue found, note the file path and relevant diff context
+3. Categorize findings by severity
+
+### Phase 3: Review Commit History
+1. Evaluate commit messages for clarity and conventional format
+2. Check for problematic patterns (fixup commits, merge commits, WIP commits)
+3. Assess whether changes are in scope or should be split into separate PRs
+
+### Phase 4: Generate Review Report
+1. Create a structured review report using plain ASCII characters only
+2. Organize feedback by severity:
    - Critical issues (must fix)
    - Suggestions (should consider)
    - Nitpicks (minor improvements)
    - Positive observations (good practices observed)
+
+## Output Formatting Rules
+
+### ASCII-Only Requirement
+All output text MUST use plain ASCII characters only:
+- Do NOT use Unicode symbols, special characters, or emojis (no checkmarks, crosses, arrows, bullets, stars, warning signs, etc.)
+- Use plain text alternatives: `[OK]`, `[ISSUE]`, `[WARNING]`, `[NOTE]`, `[NIT]`, `[CRITICAL]`, `*`, `-`, `->`, `>>` instead
+- Prefer single dashes `-` over double dashes `--` in prose and commentary text
+- Section headers should use plain text markers like `===`, `---`, or markdown `#`/`##`/`###`
+- This rule applies to ALL output: the terminal report and any other generated text
 
 ## Return Value
 A structured code review report containing:
@@ -103,7 +133,8 @@ A structured code review report containing:
 - **Suggestions**: Recommended improvements
 - **Nitpicks**: Minor style or convention issues
 - **Positive Observations**: Good practices worth noting
-- **PR Structure Feedback**: Commit organization and scope assessment
+- **Commit History Feedback**: Commit organization and message quality
+- **PR Structure Feedback**: Scope assessment
 
 ## Examples
 
