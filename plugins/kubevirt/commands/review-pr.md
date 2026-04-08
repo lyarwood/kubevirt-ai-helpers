@@ -141,8 +141,11 @@ First, determine which review findings would result in new inline comments (find
 
 If there are new comments to add, offer to add them as inline review comments on GitHub as a **pending review** (NOT submitted). This allows the user to review the comments before submitting.
 
+**CRITICAL: NEVER add review comments to GitHub automatically. ALWAYS ask the user for explicit confirmation first and wait for their response before proceeding.**
+
 1. Ask the user if they want to add the new review comments to the PR on GitHub
-2. If the user agrees, proceed with adding comments as described below
+2. Wait for the user to explicitly agree before proceeding - do NOT assume consent
+3. If the user agrees, proceed with adding comments as described below
 
 #### Checking for Existing Pending Reviews
 
