@@ -114,9 +114,13 @@ The review evaluates changes against KubeVirt's established standards:
 3. Check for problematic patterns (fixup commits, merge commits, WIP commits)
 
 ### Phase 4: Review Existing Discussion
-1. Use `gh pr view <pr-number> --repo <repo> --json comments,reviews` to get existing review comments
-2. Consider existing reviewer feedback to avoid duplicating points already raised
-3. Note any unresolved review threads
+1. Use `gh pr view <pr-number> --repo <repo> --json comments,reviews` to get existing review metadata
+2. Fetch actual inline review comment content using `gh api repos/<owner>/<repo>/pulls/<pr-number>/comments` to read all PR review comments with their file paths, line numbers, and body text
+3. For each review listed, also fetch per-review comments if needed: `gh api repos/<owner>/<repo>/pulls/<pr-number>/reviews/<review-id>/comments`
+4. Read and understand the substance of each comment - do not just note that comments exist
+5. When generating the review report, do NOT duplicate points already raised in existing comments
+6. Note which existing comments have been addressed by subsequent commits and which remain unresolved
+7. IMPORTANT: Do not rely on conversation context or assumptions about what comments say - always fetch and read the actual comment text from the API
 
 ### Phase 5: Analyze Changes
 1. Perform the multi-pass review against the diff:
@@ -131,11 +135,13 @@ The review evaluates changes against KubeVirt's established standards:
 2. Present the report to the user before proceeding to Phase 7
 
 ### Phase 7: Offer to Add Review Comments on GitHub
-IMPORTANT: After presenting the review report, you MUST proceed to Phase 7 and offer to add review comments. Do not wait for the user to ask.
+IMPORTANT: After presenting the review report, you MUST proceed to Phase 7. Do not wait for the user to ask.
 
-After presenting the review report, offer to add inline review comments on GitHub as a **pending review** (NOT submitted). This allows the user to review the comments before submitting.
+First, determine which review findings would result in new inline comments (findings that are not already covered by existing PR comments). If there are no new comments to add, state that all points have already been covered in existing discussion and skip the rest of Phase 7.
 
-1. Ask the user if they want to add the review comments to the PR on GitHub
+If there are new comments to add, offer to add them as inline review comments on GitHub as a **pending review** (NOT submitted). This allows the user to review the comments before submitting.
+
+1. Ask the user if they want to add the new review comments to the PR on GitHub
 2. If the user agrees, proceed with adding comments as described below
 
 #### Checking for Existing Pending Reviews
@@ -148,6 +154,12 @@ Before adding comments, check if there is already a pending review from the curr
    - Delete the existing pending review: `gh api repos/<owner>/<repo>/pulls/<pr-number>/reviews/<review-id> --method DELETE`
    - Combine old comments with new comments, deduplicating by file path and line number
 4. If no pending review exists, proceed directly to creating one with the new comments
+
+#### Filtering Out Already-Discussed Points
+Before building the comment list, cross-reference your review findings against ALL existing comments on the PR (from Phase 4 and from any existing pending review):
+- Do NOT add a comment for a point that has already been raised by any reviewer on the same file and line or on the same topic
+- Compare by substance, not just file path and line number - if someone already commented about the same issue even on a different line, do not duplicate it
+- Only add comments that raise genuinely new points not yet discussed on the PR
 
 #### Creating the Review with All Comments
 All comments must be added in a single `POST /repos/.../pulls/.../reviews` call using the `comments` array in the JSON body. Do NOT use a separate per-comment endpoint.
