@@ -117,18 +117,33 @@ The review evaluates changes against KubeVirt's established standards:
 1. Use `gh pr view <pr-number> --repo <repo> --json comments,reviews` to get existing review metadata
 2. Fetch actual inline review comment content using `gh api repos/<owner>/<repo>/pulls/<pr-number>/comments` to read all PR review comments with their file paths, line numbers, and body text
 3. For each review listed, also fetch per-review comments if needed: `gh api repos/<owner>/<repo>/pulls/<pr-number>/reviews/<review-id>/comments`
-4. Read and understand the substance of each comment - do not just note that comments exist
+4. Read and understand the substance of each comment from the fetched API text - do not just note that comments exist or rely on assumptions about what they say
 5. When generating the review report, do NOT duplicate points already raised in existing comments
 6. Note which existing comments have been addressed by subsequent commits and which remain unresolved
-7. IMPORTANT: Do not rely on conversation context or assumptions about what comments say - always fetch and read the actual comment text from the API
 
 ### Phase 5: Analyze Changes
 1. Perform the multi-pass review against the diff:
    - **General Design Pass**: Overall design and architecture
    - **Detailed Code Pass**: Line-by-line implementation review
    - **Standards Compliance Pass**: KubeVirt coding conventions
-2. For each issue found, note the file path and relevant diff context
-3. Categorize findings by severity
+2. For each issue found, note the file path. Do NOT record line numbers yet - they will be computed and verified in Phase 5b.
+3. Categorize findings by severity.
+
+### Phase 5b: Derive Line Numbers from Hunk Headers (REQUIRED gate before Phase 6)
+Line numbers MUST always be derived from diff hunk headers so they match the actual source file. The Read tool prepends its own sequential line numbers to output - these are NOT source file line numbers and MUST NEVER be used.
+
+For EVERY finding, derive the correct source line number as follows:
+1. Locate the nearest hunk header above the target line in the diff: `@@ -<old_start>,<old_count> +<new_start>,<new_count> @@`
+2. Starting from the first line after that header, count only context lines (` ` prefix) and added lines (`+` prefix) down to your target line. Skip removed lines (`-` prefix) - they do not exist in the new file.
+3. Compute: `source_line = new_start + (count - 1)`. This formula works for all cases including new files (`@@ -0,0 +1,N @@` where `new_start = 1`).
+4. Verify EACH computed line number by running:
+   ```
+   gh api repos/<owner>/<repo>/contents/<path>?ref=<head-sha> \
+     -q '.content' | base64 -d | sed -n '<source_line>p'
+   ```
+   If the output does not match the code you intend to reference, the line number is wrong - recount from the hunk header.
+
+Do NOT proceed to Phase 6 until every finding has a verified source line number.
 
 ### Phase 6: Generate Review Report
 1. Create a structured review report using plain ASCII characters only
@@ -141,11 +156,8 @@ First, determine which review findings would result in new inline comments (find
 
 If there are new comments to add, offer to add them as inline review comments on GitHub as a **pending review** (NOT submitted). This allows the user to review the comments before submitting.
 
-**CRITICAL: NEVER add review comments to GitHub automatically. ALWAYS ask the user for explicit confirmation first and wait for their response before proceeding.**
-
 1. Ask the user if they want to add the new review comments to the PR on GitHub
-2. Wait for the user to explicitly agree before proceeding - do NOT assume consent
-3. If the user agrees, proceed with adding comments as described below
+2. If the user agrees, proceed with adding comments as described below
 
 #### Checking for Existing Pending Reviews
 
@@ -170,18 +182,28 @@ Before building the comment list, cross-reference your review findings against A
 - Compare by substance, not just file path and line number - if someone already commented about the same issue even on a different line, do not duplicate it
 - Only add comments that raise genuinely new points not yet discussed on the PR
 
+#### Re-verify Line Numbers (REQUIRED before posting)
+Before building the review payload, re-derive and verify every line number for new comments using the same procedure as Phase 5b. For each new comment:
+1. Re-derive the source line number from the diff hunk header (count context and added lines, skip removed lines, compute `new_start + (count - 1)`).
+2. Verify by running:
+   ```
+   gh api repos/<owner>/<repo>/contents/<path>?ref=<head-sha> \
+     -q '.content' | base64 -d | sed -n '<source_line>p'
+   ```
+   The output MUST match the code the comment refers to. If it does not, recount from the hunk header until it does. Do NOT post a comment with an unverified line number.
+
 #### Creating the Review with All Comments
 All comments must be added in a single `POST /repos/.../pulls/.../reviews` call using the `comments` array in the JSON body. Do NOT use a separate per-comment endpoint.
 
 **IMPORTANT**: Preserved existing comments MUST appear with their original body text verbatim - do not rephrase, summarize, fix typos, or "improve" them in any way.
 
-1. Build a JSON body with all comments (preserved old comments first, then new ones). Do NOT include a body field - it is not visible on GitHub until the review is submitted,
-   and it does not pre-fill the submission dialog:
+1. Build a JSON body with all comments (preserved old comments first, then new ones):
    ```
    gh api repos/<owner>/<repo>/pulls/<pr-number>/reviews \
      --method POST \
      --input - <<'EOF'
    {
+     "body": "Review summary text here",
      "comments": [
        {
          "path": "pkg/example/file.go",
@@ -203,22 +225,20 @@ All comments must be added in a single `POST /repos/.../pulls/.../reviews` call 
 2. Do NOT include an `event` field - omitting it creates the review in PENDING state by default
 3. For findings that span multiple lines, use `start_line` and `line` to create multi-line comments
 4. For general findings not tied to a specific line, add them as a single comment on a relevant file
+5. The `line` field must use verified source file line numbers from Phase 5b
 
 #### Important: Do NOT Submit the Review
 - The review MUST remain in PENDING state after adding comments
 - Do NOT call the submit review endpoint (`POST /repos/.../pulls/.../reviews/.../events`)
 - Do NOT use `gh pr review --approve/--request-changes/--comment` as this submits immediately
 - Inform the user that the review is pending and they can go to the PR page to review comments and submit manually
-- When asked to add review comments, suggest a short review summary the user can paste into the submission dialog when they submit the review on GitHub
 
 ## Output Formatting Rules
 
 ### ASCII-Only Requirement
 All output text, review comments, and GitHub review comments MUST use plain ASCII characters only:
 - Do NOT use Unicode symbols, special characters, or emojis (no checkmarks, crosses, arrows, bullets, stars, warning signs, etc.)
-- Use plain text alternatives: `[OK]`, `[ISSUE]`, `[WARNING]`, `[NOTE]`, `[NIT]`, `[CRITICAL]`, `*`, `-`, `->`, `>>` instead for terminal report output
-- Do NOT use bracketed tags like `[SUGGESTION]`, `[NIT]`, `[CRITICAL]` etc. as prefixes in GitHub review comment bodies. Write comment text naturally.
-  Lowercase descriptors like `nit:` are fine.
+- Use plain text alternatives: `[OK]`, `[ISSUE]`, `[WARNING]`, `[NOTE]`, `[NIT]`, `[CRITICAL]`, `*`, `-`, `->`, `>>` instead
 - Prefer single dashes `-` over double dashes `--` in prose and commentary text
 - Section headers should use plain text markers like `===`, `---`, or markdown `#`/`##`/`###`
 - This rule applies to ALL output: the terminal report, GitHub review comments, and any other generated text
