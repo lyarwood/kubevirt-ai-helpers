@@ -127,11 +127,75 @@ The review evaluates changes against KubeVirt's established standards:
 3. Categorize findings by severity
 
 ### Phase 6: Generate Review Report
-1. Create a structured review report
-2. If the `--submit` flag is used, post the review via `gh pr review`:
-   - `gh pr review <pr-number> --repo <repo> --comment --body "<review>"` for general feedback
-   - `gh pr review <pr-number> --repo <repo> --approve --body "<review>"` to approve
-   - `gh pr review <pr-number> --repo <repo> --request-changes --body "<review>"` to request changes
+1. Create a structured review report using plain ASCII characters only
+2. Present the report to the user before proceeding to Phase 7
+
+### Phase 7: Offer to Add Review Comments on GitHub
+IMPORTANT: After presenting the review report, you MUST proceed to Phase 7 and offer to add review comments. Do not wait for the user to ask.
+
+After presenting the review report, offer to add inline review comments on GitHub as a **pending review** (NOT submitted). This allows the user to review the comments before submitting.
+
+1. Ask the user if they want to add the review comments to the PR on GitHub
+2. If the user agrees, proceed with adding comments as described below
+
+#### Checking for Existing Pending Reviews
+Before adding comments, check if there is already a pending review from the current user:
+1. Use `gh api repos/<owner>/<repo>/pulls/<pr-number>/reviews` to list all reviews
+2. Filter for reviews with `state: "PENDING"` and authored by the current user (use `gh api user` to get the current username)
+3. If a pending review exists:
+   - Retrieve existing pending comments with `gh api repos/<owner>/<repo>/pulls/<pr-number>/reviews/<review-id>/comments`
+   - Collect all existing comments (preserve them)
+   - Delete the existing pending review: `gh api repos/<owner>/<repo>/pulls/<pr-number>/reviews/<review-id> --method DELETE`
+   - Combine old comments with new comments, deduplicating by file path and line number
+4. If no pending review exists, proceed directly to creating one with the new comments
+
+#### Creating the Review with All Comments
+All comments must be added in a single `POST /repos/.../pulls/.../reviews` call using the `comments` array in the JSON body. Do NOT use a separate per-comment endpoint.
+
+1. Build a JSON body with all comments (both preserved old and new):
+   ```
+   gh api repos/<owner>/<repo>/pulls/<pr-number>/reviews \
+     --method POST \
+     --input - <<'EOF'
+   {
+     "body": "Review summary text here",
+     "comments": [
+       {
+         "path": "pkg/example/file.go",
+         "line": 42,
+         "side": "RIGHT",
+         "body": "Comment text here"
+       },
+       {
+         "path": "pkg/example/other.go",
+         "start_line": 10,
+         "line": 15,
+         "side": "RIGHT",
+         "body": "Multi-line comment here"
+       }
+     ]
+   }
+   EOF
+   ```
+2. Do NOT include an `event` field - omitting it creates the review in PENDING state by default
+3. For findings that span multiple lines, use `start_line` and `line` to create multi-line comments
+4. For general findings not tied to a specific line, add them as a single comment on a relevant file
+
+#### Important: Do NOT Submit the Review
+- The review MUST remain in PENDING state after adding comments
+- Do NOT call the submit review endpoint (`POST /repos/.../pulls/.../reviews/.../events`)
+- Do NOT use `gh pr review --approve/--request-changes/--comment` as this submits immediately
+- Inform the user that the review is pending and they can go to the PR page to review comments and submit manually
+
+## Output Formatting Rules
+
+### ASCII-Only Requirement
+All output text, review comments, and GitHub review comments MUST use plain ASCII characters only:
+- Do NOT use Unicode symbols, special characters, or emojis (no checkmarks, crosses, arrows, bullets, stars, warning signs, etc.)
+- Use plain text alternatives: `[OK]`, `[ISSUE]`, `[WARNING]`, `[NOTE]`, `[NIT]`, `[CRITICAL]`, `*`, `-`, `->`, `>>` instead
+- Prefer single dashes `-` over double dashes `--` in prose and commentary text
+- Section headers should use plain text markers like `===`, `---`, or markdown `#`/`##`/`###`
+- This rule applies to ALL output: the terminal report, GitHub review comments, and any other generated text
 
 ## Return Value
 A structured code review report containing:
@@ -145,6 +209,7 @@ A structured code review report containing:
 - **Commit History Feedback**: Commit organization and message quality
 - **Existing Discussion Summary**: Key points from prior reviews
 - **Verdict**: Recommended action (approve, request changes, or comment)
+- **Pending Review Status**: Whether comments were added to GitHub and how to submit
 
 ## Examples
 
@@ -163,27 +228,11 @@ A structured code review report containing:
    /kubevirt:review-pr kubevirt/containerized-data-importer#5678
    ```
 
-4. **Review and submit feedback to GitHub**:
-   ```
-   /kubevirt:review-pr 12345 --submit
-   ```
-   Posts the review as a comment on the PR.
-
-5. **Review and approve**:
-   ```
-   /kubevirt:review-pr 12345 --submit --approve
-   ```
-
 ## Arguments
 - `<pr-number-or-url>`: (Required) The PR to review. Can be:
   - A simple PR number (e.g., `12345`) - assumes kubevirt/kubevirt
   - A full GitHub URL (e.g., `https://github.com/kubevirt/kubevirt/pull/12345`)
   - An owner/repo#number format (e.g., `kubevirt/kubevirt#12345`)
-
-## Options
-- `--submit`: Post the review as a comment on the GitHub PR
-- `--approve`: Used with `--submit` to approve the PR
-- `--request-changes`: Used with `--submit` to request changes on the PR
 
 ## See Also
 - `/kubevirt:review` - Review local branch changes using KubeVirt project best practices
