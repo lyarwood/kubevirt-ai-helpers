@@ -21,7 +21,7 @@
     {
       "name": "kubevirt",
       "description": "Core KubeVirt workflows for code review, linting, CI analysis, and VEP management",
-      "version": "1.3.0",
+      "version": "1.4.1",
       "commands": [
         {
           "name": "ci-health",
@@ -63,6 +63,12 @@
           "name": "review-ci",
           "description": "Review CI failures for a given PR and provide analysis with remediation suggestions",
           "synopsis": "/kubevirt:review-ci <pr-number-or-url>",
+          "argument_hint": "<pr-number-or-url>"
+        },
+        {
+          "name": "review-pr",
+          "description": "Review a GitHub PR using gh CLI, applying KubeVirt project best practices",
+          "synopsis": "/kubevirt:review-pr <pr-number-or-url>",
           "argument_hint": "<pr-number-or-url>"
         },
         {
