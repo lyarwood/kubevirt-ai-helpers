@@ -145,14 +145,20 @@ If there are new comments to add, offer to add them as inline review comments on
 2. If the user agrees, proceed with adding comments as described below
 
 #### Checking for Existing Pending Reviews
+
+**CRITICAL: Existing pending comments are sacred and MUST be preserved exactly as-is.**
+
+The user may have manually written or edited pending review comments before invoking this command. These comments represent the user's own review work and MUST NOT be modified, reworded, dropped, or reordered under any circumstances.
+
 Before adding comments, check if there is already a pending review from the current user:
 1. Use `gh api repos/<owner>/<repo>/pulls/<pr-number>/reviews` to list all reviews
 2. Filter for reviews with `state: "PENDING"` and authored by the current user (use `gh api user` to get the current username)
 3. If a pending review exists:
    - Retrieve existing pending comments with `gh api repos/<owner>/<repo>/pulls/<pr-number>/reviews/<review-id>/comments`
-   - Collect all existing comments (preserve them)
+   - Collect all existing comments and **preserve every single one exactly as-is** - do NOT alter the body text, file path, line number, or any other field of existing comments
    - Delete the existing pending review: `gh api repos/<owner>/<repo>/pulls/<pr-number>/reviews/<review-id> --method DELETE`
-   - Combine old comments with new comments, deduplicating by file path and line number
+   - Combine old comments with new comments, placing preserved old comments first, then appending new comments
+   - When deduplicating by file path and line number, always keep the **existing** comment (the user's version) and discard the new AI-generated one - never replace a user's comment with an AI-generated alternative
 4. If no pending review exists, proceed directly to creating one with the new comments
 
 #### Filtering Out Already-Discussed Points
@@ -164,7 +170,9 @@ Before building the comment list, cross-reference your review findings against A
 #### Creating the Review with All Comments
 All comments must be added in a single `POST /repos/.../pulls/.../reviews` call using the `comments` array in the JSON body. Do NOT use a separate per-comment endpoint.
 
-1. Build a JSON body with all comments (both preserved old and new):
+**IMPORTANT**: Preserved existing comments MUST appear with their original body text verbatim - do not rephrase, summarize, fix typos, or "improve" them in any way.
+
+1. Build a JSON body with all comments (preserved old comments first, then new ones):
    ```
    gh api repos/<owner>/<repo>/pulls/<pr-number>/reviews \
      --method POST \
