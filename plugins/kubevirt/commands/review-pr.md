@@ -172,13 +172,13 @@ All comments must be added in a single `POST /repos/.../pulls/.../reviews` call 
 
 **IMPORTANT**: Preserved existing comments MUST appear with their original body text verbatim - do not rephrase, summarize, fix typos, or "improve" them in any way.
 
-1. Build a JSON body with all comments (preserved old comments first, then new ones):
+1. Build a JSON body with all comments (preserved old comments first, then new ones). Do NOT include a body field - it is not visible on GitHub until the review is submitted,
+   and it does not pre-fill the submission dialog:
    ```
    gh api repos/<owner>/<repo>/pulls/<pr-number>/reviews \
      --method POST \
      --input - <<'EOF'
    {
-     "body": "Review summary text here",
      "comments": [
        {
          "path": "pkg/example/file.go",
