@@ -29,6 +29,7 @@ KubeVirt development workflows for code review, PR review, linting, CI analysis,
 - **`/kubevirt:review-list` `[username] [--sig <sig>] [--repo <repo>] [--limit <n>] [--order-by <field>]`** - List open PRs pending your review, filterable by user, SIG, or repo
 - **`/kubevirt:review-pr` `<pr-number-or-url>`** - Review a GitHub PR using gh CLI, applying KubeVirt project best practices
 - **`/kubevirt:review` `[base-branch]`** - Review local branch changes using KubeVirt project best practices
+- **`/kubevirt:vep-find-reviewers` `<vep-number-or-sig> [--repo <repo>] [--months <n>]`** - Find potential reviewers for a VEP based on SIG ownership and recent code activity
 - **`/kubevirt:vep-groom` `<vep-pr-number>`** - Review a VEP proposal against template requirements and process guidelines
 - **`/kubevirt:vep-list` `[--sig <sig>] [--release <version>] [--status <status>]`** - List open KubeVirt Enhancement Proposals (VEPs) with status and filtering
 - **`/kubevirt:vep-review-list` `[username] [--release <version>]`** - List VEP proposal and implementation PRs for VEPs you are assigned to review

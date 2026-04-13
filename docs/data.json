@@ -84,6 +84,12 @@
           "argument_hint": "[base-branch]"
         },
         {
+          "name": "vep-find-reviewers",
+          "description": "Find potential reviewers for a VEP based on SIG ownership and recent code activity",
+          "synopsis": "/kubevirt:vep-find-reviewers <vep-number-or-sig> [--repo <repo>] [--months <n>]",
+          "argument_hint": "<vep-number-or-sig> [--repo <repo>] [--months <n>]"
+        },
+        {
           "name": "vep-groom",
           "description": "Review a VEP proposal against template requirements and process guidelines",
           "synopsis": "/kubevirt:vep-groom <vep-pr-number>",
@@ -108,7 +114,13 @@
           "argument_hint": "<vep-number>"
         }
       ],
-      "skills": [],
+      "skills": [
+        {
+          "name": "VEP Find Reviewers",
+          "id": "vep-find-reviewers",
+          "description": "Detailed implementation guide for finding VEP reviewers via OWNERS_ALIASES and git history analysis"
+        }
+      ],
       "hooks": [],
       "has_readme": true
     }
