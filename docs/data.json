@@ -66,6 +66,12 @@
           "argument_hint": "<pr-number-or-url>"
         },
         {
+          "name": "review-list",
+          "description": "List open PRs pending your review, filterable by user, SIG, or repo",
+          "synopsis": "/kubevirt:review-list [username] [--sig <sig>] [--repo <repo>]",
+          "argument_hint": "[username] [--sig <sig>] [--repo <repo>]"
+        },
+        {
           "name": "review-pr",
           "description": "Review a GitHub PR using gh CLI, applying KubeVirt project best practices",
           "synopsis": "/kubevirt:review-pr <pr-number-or-url>",
