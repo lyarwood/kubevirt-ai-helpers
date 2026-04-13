@@ -203,7 +203,6 @@ All comments must be added in a single `POST /repos/.../pulls/.../reviews` call 
      --method POST \
      --input - <<'EOF'
    {
-     "body": "Review summary text here",
      "comments": [
        {
          "path": "pkg/example/file.go",
@@ -223,15 +222,17 @@ All comments must be added in a single `POST /repos/.../pulls/.../reviews` call 
    EOF
    ```
 2. Do NOT include an `event` field - omitting it creates the review in PENDING state by default
-3. For findings that span multiple lines, use `start_line` and `line` to create multi-line comments
-4. For general findings not tied to a specific line, add them as a single comment on a relevant file
-5. The `line` field must use verified source file line numbers from Phase 5b
+3. Do NOT include a `body` field - it does not pre-fill the submission dialog on GitHub
+4. For findings that span multiple lines, use `start_line` and `line` to create multi-line comments
+5. For general findings not tied to a specific line, add them as a single comment on a relevant file
+6. The `line` field must use verified source file line numbers from Phase 5b
 
 #### Important: Do NOT Submit the Review
 - The review MUST remain in PENDING state after adding comments
 - Do NOT call the submit review endpoint (`POST /repos/.../pulls/.../reviews/.../events`)
 - Do NOT use `gh pr review --approve/--request-changes/--comment` as this submits immediately
 - Inform the user that the review is pending and they can go to the PR page to review comments and submit manually
+- Suggest a short review summary the user can paste into the submission dialog when submitting
 
 ## Output Formatting Rules
 
