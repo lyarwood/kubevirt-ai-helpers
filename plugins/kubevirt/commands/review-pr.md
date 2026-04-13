@@ -238,7 +238,7 @@ All comments must be added in a single `POST /repos/.../pulls/.../reviews` call 
 ### ASCII-Only Requirement
 All output text, review comments, and GitHub review comments MUST use plain ASCII characters only:
 - Do NOT use Unicode symbols, special characters, or emojis (no checkmarks, crosses, arrows, bullets, stars, warning signs, etc.)
-- Use plain text alternatives: `[OK]`, `[ISSUE]`, `[WARNING]`, `[NOTE]`, `[NIT]`, `[CRITICAL]`, `*`, `-`, `->`, `>>` instead
+- Do NOT prepend tag prefixes like `[ISSUE]`, `[NIT]`, `[CRITICAL]`, `[WARNING]`, `[NOTE]`, `[OK]`, or similar to comments - write the comment text directly
 - Prefer single dashes `-` over double dashes `--` in prose and commentary text
 - Section headers should use plain text markers like `===`, `---`, or markdown `#`/`##`/`###`
 - This rule applies to ALL output: the terminal report, GitHub review comments, and any other generated text
