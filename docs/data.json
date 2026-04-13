@@ -68,8 +68,8 @@
         {
           "name": "review-list",
           "description": "List open PRs pending your review, filterable by user, SIG, or repo",
-          "synopsis": "/kubevirt:review-list [username] [--sig <sig>] [--repo <repo>]",
-          "argument_hint": "[username] [--sig <sig>] [--repo <repo>]"
+          "synopsis": "/kubevirt:review-list [username] [--sig <sig>] [--repo <repo>] [--limit <n>] [--order-by <field>]",
+          "argument_hint": "[username] [--sig <sig>] [--repo <repo>] [--limit <n>] [--order-by <field>]"
         },
         {
           "name": "review-pr",
