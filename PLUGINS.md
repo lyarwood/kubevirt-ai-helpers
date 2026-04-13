@@ -30,6 +30,7 @@ KubeVirt development workflows for code review, PR review, linting, CI analysis,
 - **`/kubevirt:review` `[base-branch]`** - Review local branch changes using KubeVirt project best practices
 - **`/kubevirt:vep-groom` `<vep-pr-number>`** - Review a VEP proposal against template requirements and process guidelines
 - **`/kubevirt:vep-list` `[--sig <sig>] [--release <version>] [--status <status>]`** - List open KubeVirt Enhancement Proposals (VEPs) with status and filtering
+- **`/kubevirt:vep-review-list` `[username] [--release <version>]`** - List VEP proposal and implementation PRs for VEPs you are assigned to review
 - **`/kubevirt:vep-summary` `<vep-number>`** - Get a TL;DR summary of a specific VEP and its current state
 
 See [plugins/kubevirt/README.md](plugins/kubevirt/README.md) for detailed documentation.

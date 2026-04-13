@@ -21,7 +21,7 @@
     {
       "name": "kubevirt",
       "description": "Core KubeVirt workflows for code review, linting, CI analysis, and VEP management",
-      "version": "1.4.4",
+      "version": "1.5.0",
       "commands": [
         {
           "name": "ci-health",
@@ -88,6 +88,12 @@
           "description": "List open KubeVirt Enhancement Proposals (VEPs) with status and filtering",
           "synopsis": "/kubevirt:vep-list [--sig <sig>] [--release <version>] [--status <status>]",
           "argument_hint": "[--sig <sig>] [--release <version>] [--status <status>]"
+        },
+        {
+          "name": "vep-review-list",
+          "description": "List VEP proposal and implementation PRs for VEPs you are assigned to review",
+          "synopsis": "/kubevirt:vep-review-list [username] [--release <version>]",
+          "argument_hint": "[username] [--release <version>]"
         },
         {
           "name": "vep-summary",

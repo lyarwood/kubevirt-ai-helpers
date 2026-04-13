@@ -147,5 +147,6 @@ A structured summary containing:
 ## See Also
 - `/kubevirt:vep-list` - List all open VEPs
 - `/kubevirt:vep-groom` - Review a VEP proposal against requirements
+- `/kubevirt:vep-review-list` - List VEPs assigned to you for review with their PRs
 - [VEP Template](https://github.com/kubevirt/enhancements/blob/main/veps/NNNN-vep-template/vep.md)
 - [KubeVirt Enhancement Projects](https://github.com/orgs/kubevirt/projects)
