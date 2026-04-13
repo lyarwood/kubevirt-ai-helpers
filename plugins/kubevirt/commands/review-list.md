@@ -1,6 +1,6 @@
 ---
 description: List open PRs pending your review, filterable by user, SIG, or repo
-argument-hint: [username] [--sig <sig>] [--repo <repo>]
+argument-hint: [username] [--sig <sig>] [--repo <repo>] [--limit <n>] [--order-by <field>]
 ---
 
 ## Name
@@ -8,7 +8,7 @@ kubevirt:review-list
 
 ## Synopsis
 ```
-/kubevirt:review-list [username] [--sig <sig>] [--repo <repo>]
+/kubevirt:review-list [username] [--sig <sig>] [--repo <repo>] [--limit <n>] [--order-by <field>]
 ```
 
 ## Description
@@ -32,6 +32,9 @@ For each PR pending review:
 - `[username]`: GitHub username to look up (defaults to current user)
 - `--sig`: Filter by SIG label (compute, network, storage, etc.)
 - `--repo`: Filter by repository (defaults to `kubevirt/kubevirt`; use `all` for all kubevirt org repos, or specify e.g. `kubevirt/containerized-data-importer`)
+- `--limit`: Maximum number of PRs to display (defaults to 10)
+- `--order-by`: Sort order for results (defaults to `updated`; also accepts `created`, `age`)
+
 ## Implementation
 
 1. **Resolve GitHub Username**: Determine the reviewer's GitHub handle:
@@ -48,34 +51,42 @@ For each PR pending review:
 3. **Fetch PRs Pending Review**: For each target repository, use `gh` to find open PRs where the user is a requested reviewer:
    ```bash
    gh pr list --repo <repo> --search "review-requested:<username>" --state open \
-     --json number,title,author,labels,additions,deletions,changedFiles,createdAt,isDraft,url,headRefName \
+     --json number,title,author,labels,additions,deletions,changedFiles,createdAt,updatedAt,isDraft,url,headRefName \
      --limit 100
    ```
    Also fetch PRs where the user is an assignee but not yet reviewed:
    ```bash
    gh pr list --repo <repo> --assignee <username> --state open \
-     --json number,title,author,labels,additions,deletions,changedFiles,createdAt,isDraft,url,headRefName \
+     --json number,title,author,labels,additions,deletions,changedFiles,createdAt,updatedAt,isDraft,url,headRefName \
      --limit 100
    ```
    Merge and deduplicate the two result sets by PR number.
 
-4. **Apply SIG Filter**: If `--sig` is specified, filter the results to only include PRs that have a matching `sig/<value>` label. The user provides the short name (e.g., `compute`) and the command matches against labels like `sig/compute`.
+4. **Apply Sorting**: Sort the deduplicated results based on `--order-by`:
+   - `updated` (default): Sort by most recently updated first (use `updatedAt` field from the PR JSON)
+   - `created`: Sort by most recently created first
+   - `age`: Sort by oldest first (longest waiting for review)
 
-5. **Format Output**: Present the results as a table grouped by repository, sorted by age (oldest first) to highlight PRs that have been waiting longest:
+5. **Apply Limit**: Truncate the sorted results to the `--limit` value (default 10). If more PRs exist beyond the limit, note the total count in the output.
+
+6. **Apply SIG Filter**: If `--sig` is specified, filter the results to only include PRs that have a matching `sig/<value>` label. The user provides the short name (e.g., `compute`) and the command matches against labels like `sig/compute`. Apply this filter before sorting and limiting.
+
+7. **Format Output**: Present the results as a table grouped by repository, sorted per `--order-by`:
 
    ```
-   ## PRs Pending Review for @<username>
+   ## PRs Pending Review for @<username> (ordered by <order-by>, limit <n>)
 
-   ### <repo> (<N> PRs)
+   ### <repo> (<N> PRs, showing <limit>)
 
-   | PR | Title | Author | SIG | Size | Age | Draft |
-   |----|-------|--------|-----|------|-----|-------|
-   | #123 | Fix migration ... | @author | compute | +50/-10 (3 files) | 3d | No |
+   | PR | Title | Author | SIG | Size | Age | Updated | Draft |
+   |----|-------|--------|-----|------|-----|---------|-------|
+   | #123 | Fix migration ... | @author | compute | +50/-10 (3 files) | 3d | 1h ago | No |
 
    ### Summary
    | Metric | Count |
    |--------|-------|
    | Total PRs pending review | <N> |
+   | Showing (limit) | <limit> |
    | Draft PRs | <N> |
    | PRs older than 7 days | <N> |
    ```
@@ -110,15 +121,27 @@ A formatted report listing all open PRs pending review for the user:
    /kubevirt:review-list --repo all
    ```
 
-6. **Combine filters**:
+6. **Show more results**:
    ```
-   /kubevirt:review-list jdoe --sig storage --repo kubevirt/kubevirt
+   /kubevirt:review-list --limit 25
+   ```
+
+7. **Sort by oldest PRs first**:
+   ```
+   /kubevirt:review-list --order-by age
+   ```
+
+8. **Combine filters**:
+   ```
+   /kubevirt:review-list jdoe --sig storage --repo kubevirt/kubevirt --limit 20 --order-by created
    ```
 
 ## Arguments
 - `[username]`: (Optional) GitHub username to look up. Defaults to the current authenticated user via `gh api user`
 - `[--sig <sig>]`: (Optional) Filter by SIG label: `compute`, `network`, `storage`, `scale`, `ci`, `observability`, etc.
 - `[--repo <repo>]`: (Optional) Target repository. Defaults to `kubevirt/kubevirt`. Use `all` for all major kubevirt org repos, or specify a full `owner/repo` path
+- `[--limit <n>]`: (Optional) Maximum number of PRs to display. Defaults to `10`
+- `[--order-by <field>]`: (Optional) Sort order for results. Defaults to `updated` (most recently updated first). Also accepts `created` (most recently created first) or `age` (oldest first)
 ## See Also
 - `/kubevirt:review-pr` - Review a specific PR against KubeVirt best practices
 - `/kubevirt:review` - Review local branch changes
