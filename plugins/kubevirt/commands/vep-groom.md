@@ -206,6 +206,7 @@ A structured review report:
 ## See Also
 - `/kubevirt:vep-list` - List all open VEPs
 - `/kubevirt:vep-summary` - Get a TL;DR of a specific VEP
+- `/kubevirt:vep-review-list` - List VEPs assigned to you for review with their PRs
 - [VEP Template](https://github.com/kubevirt/enhancements/blob/main/veps/NNNN-vep-template/vep.md)
 - [VEP Process](https://github.com/kubevirt/enhancements/blob/main/README.md)
 - [KubeVirt Enhancement Projects](https://github.com/orgs/kubevirt/projects)

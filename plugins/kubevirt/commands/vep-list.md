@@ -102,5 +102,6 @@ A formatted list of VEPs with:
 ## See Also
 - `/kubevirt:vep-summary` - Get detailed summary of a specific VEP
 - `/kubevirt:vep-groom` - Review a VEP proposal against requirements
+- `/kubevirt:vep-review-list` - List VEPs assigned to you for review with their PRs
 - [KubeVirt Enhancements Repository](https://github.com/kubevirt/enhancements)
 - [KubeVirt Enhancement Tracking Projects](https://github.com/orgs/kubevirt/projects)
