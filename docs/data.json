@@ -21,7 +21,7 @@
     {
       "name": "kubevirt",
       "description": "Core KubeVirt workflows for code review, linting, CI analysis, and VEP management",
-      "version": "1.5.0",
+      "version": "1.6.0",
       "commands": [
         {
           "name": "ci-health",

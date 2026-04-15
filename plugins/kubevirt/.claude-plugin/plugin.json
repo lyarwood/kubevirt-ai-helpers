@@ -1,7 +1,7 @@
 {
   "name": "kubevirt",
   "description": "KubeVirt development workflows for code review, PR review, linting, CI analysis, and enhancement proposals (VEPs)",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "author": {
     "name": "KubeVirt Contributors"
   }
