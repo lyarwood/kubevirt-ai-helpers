@@ -6,6 +6,7 @@ These workflows wrap the KubeVirt Claude Code plugin commands for use on the [Am
 
 | Workflow | Description |
 |----------|-------------|
+| `kubevirt-dev` | Complete development workflow with automated sensor feedback loops |
 | `kubevirt-review` | Review branch changes using KubeVirt coding conventions |
 | `kubevirt-lint` | Run golangci-lint and fix issues with separate commits per linter |
 | `kubevirt-review-ci` | Analyze CI failures for a KubeVirt PR |
@@ -63,6 +64,7 @@ These workflows are Ambient-native wrappers around the same commands available a
 
 | Workflow | Plugin Command |
 |----------|---------------|
+| `kubevirt-dev` | `/kubevirt:dev` |
 | `kubevirt-review` | `/kubevirt:review` |
 | `kubevirt-lint` | `/kubevirt:lint` |
 | `kubevirt-review-ci` | `/kubevirt:review-ci` |
