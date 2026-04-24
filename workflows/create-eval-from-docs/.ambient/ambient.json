@@ -1,0 +1,36 @@
+{
+  "name": "Create Eval from Docs",
+  "description": "Generate MCPChecker evaluation tasks from KubeVirt user-guide documentation for the kubernetes-mcp-server project",
+  "enabled": true,
+  "systemPrompt": "You are a KubeVirt evaluation task generator. Your job is to read KubeVirt user-guide documentation, extract actionable workflows, and generate MCPChecker v1alpha2 evaluation task YAML files for the kubernetes-mcp-server project. Follow the instructions in CLAUDE.md exactly. Always confirm with the user before writing generated files.",
+  "startupPrompt": "I am ready to generate MCPChecker evaluation tasks from KubeVirt user-guide documentation.\n\nI have access to:\n- The KubeVirt user-guide repository with 93 documentation pages\n- The kubernetes-mcp-server repository with existing evaluation tasks\n\nYou can provide:\n- A specific doc path (e.g., `docs/compute/live_migration.md`)\n- A feature keyword (e.g., `cpu-hotplug`, `hotplug-volumes`)\n- A category name (e.g., `compute`, `storage`) to batch-process all docs\n\nWhat documentation would you like me to convert to evaluation tasks?",
+  "rubric": {
+    "activationPrompt": "After generating all evaluation task files, evaluate the quality of the generated tasks using the rubric.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "prompt_quality": {
+          "type": "number",
+          "description": "Are prompts natural-language, outcome-oriented, and free of kubectl commands? (1-5)"
+        },
+        "verify_coverage": {
+          "type": "number",
+          "description": "Do verify scripts check all expected outcomes with proper exit codes? (1-5)"
+        },
+        "setup_cleanup": {
+          "type": "number",
+          "description": "Is setup/cleanup idempotent with proper namespace isolation and ignoreNotFound? (1-5)"
+        },
+        "convention_adherence": {
+          "type": "number",
+          "description": "Do tasks follow existing patterns from kubernetes-mcp-server/evals/tasks/kubevirt/? (1-5)"
+        },
+        "mcp_tool_mapping": {
+          "type": "number",
+          "description": "Are workflows correctly mapped to available MCP tools with gaps identified? (1-5)"
+        }
+      },
+      "required": ["prompt_quality", "verify_coverage", "setup_cleanup", "convention_adherence", "mcp_tool_mapping"]
+    }
+  }
+}

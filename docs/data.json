@@ -21,7 +21,7 @@
     {
       "name": "kubevirt",
       "description": "Core KubeVirt workflows for code review, linting, CI analysis, and VEP management",
-      "version": "1.6.0",
+      "version": "1.7.0",
       "commands": [
         {
           "name": "ci-health",
@@ -52,6 +52,12 @@
           "description": "Intelligent CI failure triage with root cause analysis and prioritized recommendations",
           "synopsis": "/kubevirt:ci-triage <job-or-category> [--context <context>] [--deep-analysis]",
           "argument_hint": "<job-or-category> [--context <context>]"
+        },
+        {
+          "name": "create-eval-from-docs",
+          "description": "Generate MCPChecker evaluation tasks from KubeVirt user-guide documentation",
+          "synopsis": "/kubevirt:create-eval-from-docs <doc-path-or-feature>",
+          "argument_hint": "<doc-path-or-feature>"
         },
         {
           "name": "lint",
@@ -115,6 +121,11 @@
         }
       ],
       "skills": [
+        {
+          "name": "Create Eval from Docs",
+          "id": "create-eval-from-docs",
+          "description": "Detailed implementation guide for the /kubevirt:create-eval-from-docs command - generates MCPChecker evaluation tasks from KubeVirt user-guide documentation by extracting workflows, mapping to MCP tools, and producing v1alpha2 task YAML files"
+        },
         {
           "name": "VEP Find Reviewers",
           "id": "vep-find-reviewers",
