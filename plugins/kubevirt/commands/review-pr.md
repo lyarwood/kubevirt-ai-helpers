@@ -14,7 +14,7 @@ kubevirt:review-pr
 ## Description
 The `kubevirt:review-pr` command performs a comprehensive code review of a GitHub pull request using the `gh` CLI, applying KubeVirt project coding conventions and reviewer guidelines. Unlike `/kubevirt:review` (which reviews local branch changes), this command works directly against a remote PR without requiring a local checkout.
 
-This command simulates a thorough code review following the KubeVirt multi-pass review approach:
+This command simulates a thorough code review following the KubeVirt multi-pass review approach. Read the shared review checklist at `plugins/kubevirt/skills/review/SKILL.md` for the full list of review areas, conventions, and output formatting rules.
 
 ### Review Passes
 1. **PR Metadata Pass**: Evaluate PR title, description, labels, and overall scope
@@ -23,90 +23,18 @@ This command simulates a thorough code review following the KubeVirt multi-pass 
 4. **Standards Compliance Pass**: Check adherence to KubeVirt coding conventions
 5. **Commit History Pass**: Review commit structure and messages
 
-### Review Checklist
-The review evaluates changes against KubeVirt's established standards:
-
-#### PR Metadata
-- Clear, descriptive PR title following conventional format
-- PR description explains the "what" and "why" of the change
-- Appropriate labels and reviewers assigned
-- Linked issues referenced where applicable
-- Reasonable PR size (flag overly large PRs for splitting)
-
-#### Code Quality
-- User input validation
-- Reasonable error messages and info messages
-- Elegant, cohesive, and easily readable code
-- Early returns to avoid nesting and complexity
-- Consistent coding style throughout files
-- Constants/variables for documenting value meanings
-- Uniform import order and naming conventions
-
-#### Testing Requirements
-- Unit tests for new code
-- E2E tests for new features and bug fixes (core case must be tested)
-- Proper use of `Eventually` for async operations (no arbitrary waits)
-- Table-driven tests using Ginkgo's `DescribeTable` for test matrices
-- Proper use of decorators instead of `Skip` in tests
-
-#### Architecture
-- Informers vs GET/LIST usage (informers for virt-controller/virt-operator, GETs for virt-api)
-- PATCH vs UPDATE operations (PATCH when controller doesn't own the object)
-- Thread safety in reconcile loops (map access protected by locks)
-- Appropriate RBAC permissions (separation of concerns)
-- Update path considerations (backwards compatibility impact)
-- Event firing patterns (avoid firing on every reconcile)
-- List ordering preservation on CRD APIs
-- Privileged operations in virt-handler, not virt-launcher
-- Avoid nested loops (use hash maps for O(n) instead of O(n^2))
-- Avoid adding informers to node-level components like virt-handler
-
-#### Go Conventions
-- Prefer initialization statements (inline err checks)
-- Use switch-cases for long if/else chains
-- Use interfaces for polymorphism and behavior definition
-- Avoid global variables (use structs with receiver methods)
-- Avoid long files and utility file sprawl
-- Avoid returning too many values from functions
-- Prefer function body variables over named return values
-- Use closures with caution
-- Declare empty slices with var syntax
-- Use helpers/builders instead of `fmt.Sprintf` for complex objects
-- Use `kubevirt.io/kubevirt/pkg/pointer` for pointer operations
-- Keep function signatures lean
-
-#### Naming Conventions
-- Package names match directory names
-- No uppercase, underscores, or dashes in package names
-- Command-line flags use dashes
-- Locks named `lock` or with distinct names (`stateLock`, `mapLock`)
-- Interface names avoid redundancy with package name
-
-#### PR Structure
-- Commits should make sense (no "Fix reviewer comments", "wip" commits)
-- Changes should be in scope (out-of-scope changes belong in separate PRs)
-- Rebase preferred over merge commits
-
-#### Dependencies
-- New dependencies from trusted, well-established organizations
-- Dependencies should be well-maintained with active repositories
-
 ## Implementation
 
 ### Phase 1: Gather PR Metadata
 1. Parse the PR argument to extract the PR number and repository (defaults to `kubevirt/kubevirt`)
 2. Use `gh pr view <pr-number> --repo <repo> --json number,title,body,labels,author,reviewRequests,assignees,baseRefName,headRefName,additions,deletions,changedFiles,commits,comments,reviews,state,isDraft` to get full PR metadata
-3. Evaluate PR title, description, size, and draft status
+3. Evaluate PR title, description, size, and draft status using the PR Metadata checklist from the shared review skill
 4. Flag PRs that are too large (>500 lines changed across many files) and suggest splitting
 
 ### Phase 2: Fetch PR Diff and Changed Files
 1. Use `gh pr diff <pr-number> --repo <repo>` to get the full diff
 2. Use `gh pr view <pr-number> --repo <repo> --json files` to get the list of changed files with per-file stats
-3. For large PRs, prioritize reviewing:
-   - API changes (`staging/src/kubevirt.io/api/`)
-   - Core logic changes (`pkg/`)
-   - Test changes (`tests/`)
-   - Generated code changes (flag but don't deeply review)
+3. Prioritize files for review using the file priority order from the shared review checklist
 
 ### Phase 3: Fetch Commit History
 1. Use `gh pr view <pr-number> --repo <repo> --json commits` to get the commit list
@@ -122,7 +50,7 @@ The review evaluates changes against KubeVirt's established standards:
 6. Note which existing comments have been addressed by subsequent commits and which remain unresolved
 
 ### Phase 5: Analyze Changes
-1. Perform the multi-pass review against the diff:
+1. Perform the multi-pass review against the diff following the methodology in the shared review checklist:
    - **General Design Pass**: Overall design and architecture
    - **Detailed Code Pass**: Line-by-line implementation review
    - **Standards Compliance Pass**: KubeVirt coding conventions
@@ -146,7 +74,7 @@ For EVERY finding, derive the correct source line number as follows:
 Do NOT proceed to Phase 6 until every finding has a verified source line number.
 
 ### Phase 6: Generate Review Report
-1. Create a structured review report using plain ASCII characters only
+1. Create a structured review report following the output formatting rules from the shared review checklist
 2. Present the report to the user before proceeding to Phase 7
 
 ### Phase 7: Offer to Add Review Comments on GitHub
@@ -234,16 +162,6 @@ All comments must be added in a single `POST /repos/.../pulls/.../reviews` call 
 - Inform the user that the review is pending and they can go to the PR page to review comments and submit manually
 - Suggest a short review summary the user can paste into the submission dialog when submitting
 
-## Output Formatting Rules
-
-### ASCII-Only Requirement
-All output text, review comments, and GitHub review comments MUST use plain ASCII characters only:
-- Do NOT use Unicode symbols, special characters, or emojis (no checkmarks, crosses, arrows, bullets, stars, warning signs, etc.)
-- Do NOT prepend tag prefixes like `[ISSUE]`, `[NIT]`, `[CRITICAL]`, `[WARNING]`, `[NOTE]`, `[OK]`, or similar to comments - write the comment text directly
-- Prefer single dashes `-` over double dashes `--` in prose and commentary text
-- Section headers should use plain text markers like `===`, `---`, or markdown `#`/`##`/`###`
-- This rule applies to ALL output: the terminal report, GitHub review comments, and any other generated text
-
 ## Return Value
 A structured code review report containing:
 
@@ -282,7 +200,7 @@ A structured code review report containing:
   - An owner/repo#number format (e.g., `kubevirt/kubevirt#12345`)
 
 ## See Also
-- `/kubevirt:review` - Review local branch changes using KubeVirt project best practices
+- `/kubevirt:review` - Review local branch changes (auto-detects associated PR)
 - `/kubevirt:review-ci` - Review CI failures for a given PR
 - `/kubevirt:lint` - Lint a path and generate a plan to fix issues
 - KubeVirt [Coding Conventions](https://github.com/kubevirt/kubevirt/blob/main/docs/coding-conventions.md)
