@@ -127,6 +127,11 @@
           "description": "Detailed implementation guide for the /kubevirt:create-eval-from-docs command - generates MCPChecker evaluation tasks from KubeVirt user-guide documentation by extracting workflows, mapping to MCP tools, and producing v1alpha2 task YAML files"
         },
         {
+          "name": "KubeVirt Review Checklist",
+          "id": "review",
+          "description": "Shared review checklist, conventions, and multi-pass methodology used by review and review-pr commands"
+        },
+        {
           "name": "VEP Find Reviewers",
           "id": "vep-find-reviewers",
           "description": "Detailed implementation guide for finding VEP reviewers via OWNERS_ALIASES and git history analysis"
