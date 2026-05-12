@@ -79,67 +79,7 @@ This phase only applies when a PR was detected in Phase 1b. If no PR was found, 
 
 IMPORTANT: After presenting the review report, you MUST proceed to Phase 5. Do not wait for the user to ask.
 
-First, determine which review findings would result in new inline comments (findings that are not already covered by existing PR comments). If there are no new comments to add, state that all points have already been covered in existing discussion and skip the rest of Phase 5.
-
-If there are new comments to add, offer to add them as inline review comments on GitHub as a **pending review** (NOT submitted). This allows the user to review the comments before submitting.
-
-1. Ask the user if they want to add the new review comments to the PR on GitHub
-2. If the user agrees, proceed with adding comments as described below
-
-#### Checking for Existing Pending Reviews
-
-**CRITICAL: Existing pending comments are sacred and MUST be preserved exactly as-is.**
-
-The user may have manually written or edited pending review comments before invoking this command. These comments represent the user's own review work and MUST NOT be modified, reworded, dropped, or reordered under any circumstances.
-
-Before adding comments, check if there is already a pending review from the current user:
-1. Use `gh api repos/<owner>/<repo>/pulls/<number>/reviews` to list all reviews
-2. Filter for reviews with `state: "PENDING"` and authored by the current user (use `gh api user` to get the current username)
-3. If a pending review exists:
-   - Retrieve existing pending comments with `gh api repos/<owner>/<repo>/pulls/<number>/reviews/<review-id>/comments`
-   - Collect all existing comments and **preserve every single one exactly as-is** - do NOT alter the body text, file path, line number, or any other field of existing comments
-   - Delete the existing pending review: `gh api repos/<owner>/<repo>/pulls/<number>/reviews/<review-id> --method DELETE`
-   - Combine old comments with new comments, placing preserved old comments first, then appending new comments
-   - When deduplicating by file path and line number, always keep the **existing** comment (the user's version) and discard the new AI-generated one
-4. If no pending review exists, proceed directly to creating one with the new comments
-
-#### Filtering Out Already-Discussed Points
-Before building the comment list, cross-reference your review findings against ALL existing comments on the PR (from Phase 1b and from any existing pending review):
-- Do NOT add a comment for a point that has already been raised by any reviewer on the same file and line or on the same topic
-- Compare by substance, not just file path and line number
-- Only add comments that raise genuinely new points not yet discussed on the PR
-
-#### Creating the Review with All Comments
-All comments must be added in a single `POST /repos/.../pulls/.../reviews` call using the `comments` array in the JSON body:
-
-1. Build a JSON body with all comments (preserved old comments first, then new ones):
-   ```
-   gh api repos/<owner>/<repo>/pulls/<number>/reviews \
-     --method POST \
-     --input - <<'EOF'
-   {
-     "comments": [
-       {
-         "path": "pkg/example/file.go",
-         "line": 42,
-         "side": "RIGHT",
-         "body": "Comment text here"
-       }
-     ]
-   }
-   EOF
-   ```
-2. Do NOT include an `event` field - omitting it creates the review in PENDING state by default
-3. Do NOT include a `body` field
-4. For findings that span multiple lines, use `start_line` and `line` to create multi-line comments
-5. The `line` field must use source file line numbers from the git diff
-
-#### Important: Do NOT Submit the Review
-- The review MUST remain in PENDING state after adding comments
-- Do NOT call the submit review endpoint
-- Do NOT use `gh pr review --approve/--request-changes/--comment` as this submits immediately
-- Inform the user that the review is pending and they can go to the PR page to review comments and submit manually
-- Suggest a short review summary the user can paste into the submission dialog when submitting
+Follow the GitHub Review Interaction process defined in `plugins/kubevirt/skills/review/SKILL.md` to offer, prepare, and post review comments. The `line` field must use source file line numbers from the git diff.
 
 ## Return Value
 A structured code review report containing:
