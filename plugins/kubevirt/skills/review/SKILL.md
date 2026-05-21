@@ -45,6 +45,40 @@ Read both docs thoroughly and apply all conventions they describe. Key review ar
 - PR structure (commit messages, scope, rebase preference)
 - Dependencies (trusted sources, maintenance)
 
+## VEP Cross-Reference
+
+If the PR is associated with a VEP, fetch the proposal and use it as additional review context.
+
+### Detecting VEP Association
+
+Check the PR title and body for VEP references:
+- Title matching `VEP <number>` (e.g. "VEP 190: Plugin CRD, feature gate, RBAC")
+- Body links to `kubevirt/enhancements/issues/<number>` or `kubevirt/enhancements/pull/<number>`
+
+If no VEP is detected, skip this section.
+
+### Fetching VEP Content
+
+1. Fetch the tracking issue:
+   ```
+   gh issue view <number> --repo kubevirt/enhancements --json title,body,labels,state
+   ```
+
+2. Fetch the VEP proposal content. If the proposal PR is merged, fetch from the repo:
+   ```
+   gh api repos/kubevirt/enhancements/contents/veps/ -q '.[].name' | grep "^<number>-"
+   ```
+   Then fetch the `vep.md` from the matching directory. If not yet merged, fetch from the open PR body.
+
+### Cross-Referencing
+
+With the VEP content in hand, evaluate:
+- Does the implementation match the design described in the VEP?
+- Are the API changes consistent with the API examples in the proposal?
+- Is the scope of the PR consistent with the VEP's stated goals and non-goals?
+- Does the PR description reference the tracking issue?
+- If the VEP defines graduation criteria, does the PR advance toward them?
+
 ## File Priority Order
 
 For large changesets, prioritize reviewing in this order:
