@@ -19,78 +19,31 @@ For each issue found, note the file path and relevant diff context. Categorize f
 
 ## Review Checklist
 
-### PR Metadata
+Apply the KubeVirt coding conventions and reviewer guidelines from the upstream documentation. These docs are the authoritative source - read them in full before starting the review.
 
-- Clear, descriptive PR title following conventional format
-- PR description explains the "what" and "why" of the change
-- Appropriate labels and reviewers assigned
-- Linked issues referenced where applicable
-- Reasonable PR size (flag overly large PRs for splitting)
+### Locating the Convention Docs
 
-### Code Quality
+**Local reviews** (`/kubevirt:review`): Read the following files from the KubeVirt repo (typically the current working directory):
+- `docs/coding-conventions.md`
+- `docs/reviewer-guide.md`
 
-- User input validation
-- Reasonable error messages and info messages
-- Elegant, cohesive, and easily readable code
-- Early returns to avoid nesting and complexity
-- Consistent coding style throughout files
-- Constants/variables for documenting value meanings
-- Uniform import order and naming conventions
+**Remote PR reviews** (`/kubevirt:review-pr`): Fetch the docs from the PR's target repository using `gh api`:
+```
+gh api repos/<owner>/<repo>/contents/docs/coding-conventions.md -q '.content' | base64 -d
+gh api repos/<owner>/<repo>/contents/docs/reviewer-guide.md -q '.content' | base64 -d
+```
 
-### Testing Requirements
+If the target repo does not contain these files (e.g. sub-projects like containerized-data-importer), fetch from `kubevirt/kubevirt` instead.
 
-- Unit tests for new code
-- E2E tests for new features and bug fixes (core case must be tested)
-- Proper use of `Eventually` for async operations (no arbitrary waits)
-- Table-driven tests using Ginkgo's `DescribeTable` for test matrices
-- Proper use of decorators instead of `Skip` in tests
+### What to Check
 
-### Architecture
-
-- Informers vs GET/LIST usage (informers for virt-controller/virt-operator, GETs for virt-api)
-- PATCH vs UPDATE operations (PATCH when controller doesn't own the object)
-- Thread safety in reconcile loops (map access protected by locks)
-- Appropriate RBAC permissions (separation of concerns)
-- Update path considerations (backwards compatibility impact)
-- Event firing patterns (avoid firing on every reconcile)
-- List ordering preservation on CRD APIs
-- Privileged operations in virt-handler, not virt-launcher
-- Avoid nested loops (use hash maps for O(n) instead of O(n^2))
-- Avoid adding informers to node-level components like virt-handler
-
-### Go Conventions
-
-- Prefer initialization statements (inline err checks)
-- Use switch-cases for long if/else chains
-- Use interfaces for polymorphism and behavior definition
-- Avoid global variables (use structs with receiver methods)
-- Avoid long files and utility file sprawl
-- Avoid returning too many values from functions
-- Prefer function body variables over named return values
-- Use closures with caution
-- Declare empty slices with var syntax
-- Use helpers/builders instead of `fmt.Sprintf` for complex objects
-- Use `kubevirt.io/kubevirt/pkg/pointer` for pointer operations
-- Keep function signatures lean
-
-### Naming Conventions
-
-- Package names match directory names
-- No uppercase, underscores, or dashes in package names
-- Command-line flags use dashes
-- Locks named `lock` or with distinct names (`stateLock`, `mapLock`)
-- Interface names avoid redundancy with package name
-
-### PR Structure
-
-- Commits should make sense (no "Fix reviewer comments", "wip" commits)
-- Changes should be in scope (out-of-scope changes belong in separate PRs)
-- Rebase preferred over merge commits
-
-### Dependencies
-
-- New dependencies from trusted, well-established organizations
-- Dependencies should be well-maintained with active repositories
+Read both docs thoroughly and apply all conventions they describe. Key review areas include:
+- Code quality, style consistency, and readability
+- Testing requirements (unit tests, E2E tests, Eventually patterns)
+- Architecture patterns (informers vs GET/LIST, PATCH vs UPDATE, RBAC, thread safety)
+- Go conventions (imports, naming, interfaces, error handling)
+- PR structure (commit messages, scope, rebase preference)
+- Dependencies (trusted sources, maintenance)
 
 ## File Priority Order
 
