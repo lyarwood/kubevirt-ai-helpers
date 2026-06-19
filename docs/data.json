@@ -44,8 +44,8 @@
         {
           "name": "ci-search",
           "description": "Search for specific test failures and patterns across all CI jobs",
-          "synopsis": "/kubevirt:ci-search <pattern> [--max-age <period>] [--job <regex>] [--exclude-job <regex>]",
-          "argument_hint": "<pattern> [--max-age <period>] [--job <regex>]"
+          "synopsis": "/kubevirt:ci-search <pattern> [--since <period>] [--job <regex>] [--exclude-job <regex>]",
+          "argument_hint": "<pattern> [--since <period>] [--job <regex>]"
         },
         {
           "name": "ci-triage",

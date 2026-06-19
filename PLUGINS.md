@@ -22,7 +22,7 @@ KubeVirt development workflows for code review, PR review, linting, CI analysis,
 - **`/kubevirt:ci-health` `[category] [--since <period>]`** - Analyze overall CI health across merge-time jobs with failure trending
 - **`/kubevirt:ci-lane` `<job-name> [--since <period>]`** - Analyze recent runs and failure patterns for a specific CI job lane
 - **`/kubevirt:ci-report` `[--scope <scope>] [--format <format>]`** - Generate comprehensive CI health reports for stakeholders
-- **`/kubevirt:ci-search` `<pattern> [--max-age <period>] [--job <regex>]`** - Search for specific test failures and patterns across all CI jobs
+- **`/kubevirt:ci-search` `<pattern> [--since <period>] [--job <regex>]`** - Search for specific test failures and patterns across all CI jobs
 - **`/kubevirt:ci-triage` `<job-or-category> [--context <context>]`** - Intelligent CI failure triage with root cause analysis and prioritized recommendations
 - **`/kubevirt:create-eval-from-docs` `<doc-path-or-feature>`** - Generate MCPChecker evaluation tasks from KubeVirt user-guide documentation
 - **`/kubevirt:lint` `<path>`** - Lint a path and generate a plan to fix issues with separate commits per linter
