@@ -74,22 +74,27 @@ This command leverages multiple healthcheck MCP tools to:
    - Parse stack traces and error messages
    - Generate source code links with `get_failure_source_context`
 
-2. **Analyze trends**:
+2. **Search for related failures across all jobs**:
+   - Use `search_ci_failures` to find the same failure pattern in other jobs
+   - Determine if the failure is isolated to this job or widespread
+   - Identify environmental patterns (ARM64 vs x86, K8s version)
+
+3. **Analyze trends**:
    - Call `analyze_failure_trends` with 14-30 day period
    - Detect flaky tests and regression patterns
    - Identify trend direction
 
-3. **Perform correlation analysis**:
+4. **Perform correlation analysis**:
    - Use `analyze_failure_correlation` across related jobs
    - Identify systemic issues
    - Detect environment-specific problems
 
-4. **Assess impact**:
+5. **Assess impact**:
    - Call `assess_failure_impact` with context parameter
    - Get business impact scores
    - Receive triage priority recommendations
 
-5. **Review quarantine status**:
+6. **Review quarantine status**:
    - Use `analyze_quarantine_intelligence` for affected tests
    - Get effectiveness scores
    - Receive quarantine action recommendations

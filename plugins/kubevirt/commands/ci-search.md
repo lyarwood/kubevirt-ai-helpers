@@ -1,6 +1,6 @@
 ---
 description: Search for specific test failures and patterns across all CI jobs
-argument-hint: <pattern> [--max-age <period>] [--job <regex>]
+argument-hint: <pattern> [--since <period>] [--job <regex>]
 ---
 
 ## Name
@@ -8,7 +8,7 @@ kubevirt:ci-search
 
 ## Synopsis
 ```
-/kubevirt:ci-search <pattern> [--max-age <period>] [--job <regex>] [--exclude-job <regex>]
+/kubevirt:ci-search <pattern> [--since <period>] [--job <regex>] [--exclude-job <regex>]
 ```
 
 ## Description
@@ -52,7 +52,7 @@ This command uses the `healthcheck search` tool to:
 ### Phase 1: Parse Search Parameters
 1. Extract search pattern (required)
 2. Parse optional filters:
-   - `--max-age`: Time range (default: 14 days)
+   - `--since`: Time range using human-friendly durations (e.g., `7d`, `2w`, `48h`). Default: 14 days. Alias for `--max-age` but accepts shorthand like `7d` (days) and `2w` (weeks) in addition to hours.
    - `--job`: Job name filter regex
    - `--exclude-job`: Jobs to exclude
    - `--type`: Search type (junit, bug, build-log, all)
@@ -60,7 +60,7 @@ This command uses the `healthcheck search` tool to:
 ### Phase 2: Execute Search
 1. Run healthcheck search command:
    ```bash
-   healthcheck search "<pattern>" --max-age <period> --job "<regex>" --summary --stats --output json
+   healthcheck search "<pattern>" --since <period> --job "<regex>" --summary --stats --output json
    ```
 2. Parse JSON output containing:
    - Total matches across all jobs
@@ -145,9 +145,9 @@ A comprehensive search results report containing:
 
 2. **Search for timeouts in the last week**:
    ```
-   /kubevirt:ci-search "timeout" --max-age 168h
+   /kubevirt:ci-search "timeout" --since 7d
    ```
-   Searches for timeout failures in the last 7 days (168 hours).
+   Searches for timeout failures in the last 7 days.
 
 3. **Search for operator issues in periodic jobs**:
    ```
@@ -163,7 +163,7 @@ A comprehensive search results report containing:
 
 5. **Search for network issues in recent runs**:
    ```
-   /kubevirt:ci-search "network" --max-age 24h
+   /kubevirt:ci-search "network" --since 24h
    ```
    Finds network failures in the last 24 hours.
 
@@ -175,19 +175,19 @@ A comprehensive search results report containing:
 
 7. **Search in build logs (not just junit)**:
    ```
-   /kubevirt:ci-search "panic" --type build-log --max-age 72h
+   /kubevirt:ci-search "panic" --type build-log --since 3d
    ```
    Searches build logs for panics in the last 3 days.
 
 8. **Comprehensive search for flaky test**:
    ```
-   /kubevirt:ci-search "should boot VMI" --max-age 336h
+   /kubevirt:ci-search "should boot VMI" --since 2w
    ```
    14-day search to assess flakiness patterns.
 
 ## Arguments
 - `<pattern>`: (Required) Regex pattern to search for in test names or failure messages
-- `--max-age <period>`: (Optional) How far back to search (e.g., `24h`, `7d`, `336h`). Default: `336h` (14 days)
+- `--since <period>`: (Optional) How far back to search using human-friendly durations (e.g., `24h`, `7d`, `2w`). Default: 14 days. Accepts hours (`48h`), days (`7d`), and weeks (`2w`). The `--max-age` flag is also supported for raw hour values (e.g., `336h`).
 - `--job <regex>`: (Optional) Filter results to jobs matching this regex
 - `--exclude-job <regex>`: (Optional) Exclude jobs matching this regex
 - `--type <search-type>`: (Optional) Search type: `junit` (default), `bug`, `build-log`, `bug+junit`, `all`
