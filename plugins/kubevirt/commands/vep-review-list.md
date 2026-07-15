@@ -180,6 +180,7 @@ No VEPs found with @<username> as VEP Reviewer on the enhancement tracking proje
 - `[--release <version>]`: (Optional) Filter by release version: `1.8`, `1.9`, etc. If omitted, searches all enhancement tracking projects
 
 ## See Also
+- `/kubevirt:review-enhancement` - Combined process and technical review of a VEP
 - `/kubevirt:vep-list` - List all open VEPs with status and filtering
 - `/kubevirt:vep-summary` - Get detailed summary of a specific VEP
 - `/kubevirt:vep-groom` - Review a VEP proposal against requirements

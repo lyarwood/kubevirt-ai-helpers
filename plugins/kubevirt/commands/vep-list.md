@@ -100,6 +100,7 @@ A formatted list of VEPs with:
 - `[--status <status>]`: (Optional) Filter by status: `proposed`, `tracked`, `at-risk`, `complete`, `removed`
 
 ## See Also
+- `/kubevirt:review-enhancement` - Combined process and technical review of a VEP
 - `/kubevirt:vep-summary` - Get detailed summary of a specific VEP
 - `/kubevirt:vep-groom` - Review a VEP proposal against requirements
 - `/kubevirt:vep-review-list` - List VEPs assigned to you for review with their PRs

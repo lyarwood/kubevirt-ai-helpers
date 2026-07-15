@@ -145,6 +145,7 @@ A structured summary containing:
 - `<vep-number>`: (Required) The VEP number to summarize (e.g., `190`, `172`, `10`)
 
 ## See Also
+- `/kubevirt:review-enhancement` - Combined process and technical review of a VEP
 - `/kubevirt:vep-list` - List all open VEPs
 - `/kubevirt:vep-groom` - Review a VEP proposal against requirements
 - `/kubevirt:vep-review-list` - List VEPs assigned to you for review with their PRs

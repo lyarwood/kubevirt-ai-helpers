@@ -144,6 +144,7 @@ No reviewers found for SIG <name>. Check that the SIG name is correct and that O
 - `[--months <n>]`: (Optional) Number of months of git history to analyze. Defaults to `6`
 
 ## See Also
+- `/kubevirt:review-enhancement` - Combined process and technical review of a VEP
 - `/kubevirt:vep-list` - List all open VEPs with status and filtering
 - `/kubevirt:vep-summary` - Get detailed summary of a specific VEP
 - `/kubevirt:vep-review-list` - List VEPs assigned to you for review
