@@ -204,6 +204,7 @@ A structured review report:
 - `<vep-pr-number>`: (Required) The PR number for the VEP proposal to review
 
 ## See Also
+- `/kubevirt:review-enhancement` - Combined process and technical review of a VEP
 - `/kubevirt:vep-list` - List all open VEPs
 - `/kubevirt:vep-summary` - Get a TL;DR of a specific VEP
 - `/kubevirt:vep-review-list` - List VEPs assigned to you for review with their PRs
