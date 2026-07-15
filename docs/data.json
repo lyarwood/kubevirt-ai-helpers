@@ -21,7 +21,7 @@
     {
       "name": "kubevirt",
       "description": "Core KubeVirt workflows for code review, linting, CI analysis, and VEP management",
-      "version": "1.8.0",
+      "version": "1.9.0",
       "commands": [
         {
           "name": "ci-health",
@@ -70,6 +70,12 @@
           "description": "Review CI failures for a given PR and provide analysis with remediation suggestions",
           "synopsis": "/kubevirt:review-ci <pr-number-or-url>",
           "argument_hint": "<pr-number-or-url>"
+        },
+        {
+          "name": "review-enhancement",
+          "description": "Review a KubeVirt enhancement proposal for process compliance and technical quality",
+          "synopsis": "/kubevirt:review-enhancement <vep-number>",
+          "argument_hint": "<vep-number>"
         },
         {
           "name": "review-list",
@@ -130,6 +136,11 @@
           "name": "KubeVirt Review Checklist",
           "id": "review",
           "description": "Shared review checklist, conventions, and multi-pass methodology used by review and review-pr commands"
+        },
+        {
+          "name": "Review Enhancement",
+          "id": "review-enhancement",
+          "description": "Detailed implementation guide for reviewing KubeVirt enhancement proposals for process compliance and technical quality"
         },
         {
           "name": "VEP Find Reviewers",

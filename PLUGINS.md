@@ -27,6 +27,7 @@ KubeVirt development workflows for code review, PR review, linting, CI analysis,
 - **`/kubevirt:create-eval-from-docs` `<doc-path-or-feature>`** - Generate MCPChecker evaluation tasks from KubeVirt user-guide documentation
 - **`/kubevirt:lint` `<path>`** - Lint a path and generate a plan to fix issues with separate commits per linter
 - **`/kubevirt:review-ci` `<pr-number-or-url>`** - Review CI failures for a given PR and provide analysis with remediation suggestions
+- **`/kubevirt:review-enhancement` `<vep-number>`** - Review a KubeVirt enhancement proposal for process compliance and technical quality
 - **`/kubevirt:review-list` `[username] [--sig <sig>] [--repo <repo>] [--limit <n>] [--order-by <field>]`** - List open PRs pending your review, filterable by user, SIG, or repo
 - **`/kubevirt:review-pr` `<pr-number-or-url>`** - Review a GitHub PR using gh CLI, applying KubeVirt project best practices
 - **`/kubevirt:review` `[base-branch]`** - Review local branch changes using KubeVirt project best practices
