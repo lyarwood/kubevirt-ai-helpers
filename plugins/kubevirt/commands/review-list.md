@@ -1,6 +1,6 @@
 ---
 description: List open PRs pending your review, filterable by user, SIG, or repo
-argument-hint: [username] [--sig <sig>] [--repo <repo>] [--limit <n>] [--order-by <field>]
+argument-hint: "[username] [--sig <sig>] [--repo <repo>] [--limit <n>] [--order-by <field>]"
 ---
 
 ## Name

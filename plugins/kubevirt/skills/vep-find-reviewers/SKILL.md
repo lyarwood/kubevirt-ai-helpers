@@ -1,6 +1,6 @@
 ---
-name: VEP Find Reviewers
-description: Detailed implementation guide for finding VEP reviewers via OWNERS_ALIASES and git history analysis
+name: vep-find-reviewers
+description: Detailed implementation guide for finding VEP reviewers via OWNERS_ALIASES and git history analysis. Use when the /kubevirt:vep-find-reviewers command runs or when identifying candidate reviewers for a VEP.
 ---
 
 # VEP Find Reviewers

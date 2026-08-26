@@ -1,6 +1,6 @@
 ---
-name: Create Eval from Docs
-description: Detailed implementation guide for the /kubevirt:create-eval-from-docs command - generates MCPChecker evaluation tasks from KubeVirt user-guide documentation by extracting workflows, mapping to MCP tools, and producing v1alpha2 task YAML files
+name: create-eval-from-docs
+description: Generates MCPChecker evaluation tasks from KubeVirt user-guide documentation by extracting workflows, mapping to MCP tools, and producing v1alpha2 task YAML files. Use when the /kubevirt:create-eval-from-docs command runs or when expanding eval coverage from user-guide docs.
 ---
 
 # Create Eval from Docs

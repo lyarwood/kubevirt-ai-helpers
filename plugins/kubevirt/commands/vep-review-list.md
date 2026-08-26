@@ -1,6 +1,6 @@
 ---
 description: List VEP proposal and implementation PRs for VEPs you are assigned to review
-argument-hint: [username] [--release <version>]
+argument-hint: "[username] [--release <version>]"
 ---
 
 ## Name

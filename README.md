@@ -1,5 +1,7 @@
 # KubeVirt AI Helpers
 
+[![skillsaw grade](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Flyarwood%2Fkubevirt-ai-helpers%2Fmain%2F.skillsaw-badge.json)](https://skillsaw.org/)
+
 A collection of Claude Code plugins to automate and assist with KubeVirt development workflows.
 
 ## Overview

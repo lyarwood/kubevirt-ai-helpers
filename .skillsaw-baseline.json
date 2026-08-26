@@ -1,0 +1,61 @@
+{
+  "version": "1",
+  "generated_by": "skillsaw 0.18.0",
+  "generated_at": "2026-08-26T13:32:59.305578+00:00",
+  "violations": [
+    {
+      "fingerprint": "af30f0fe6b1a444b",
+      "rule_id": "context-budget",
+      "file_path": "plugins/kubevirt/commands/ci-report.md",
+      "message": "Estimated 2,209 tokens exceeds command warn limit of 2,000",
+      "severity": "warning",
+      "value": 2209,
+      "baseline_mode": "ceiling"
+    },
+    {
+      "fingerprint": "c24651ad0fce9f90",
+      "rule_id": "context-budget",
+      "file_path": "plugins/kubevirt/commands/ci-triage.md",
+      "message": "Estimated 2,126 tokens exceeds command warn limit of 2,000",
+      "severity": "warning",
+      "value": 2126,
+      "baseline_mode": "ceiling"
+    },
+    {
+      "fingerprint": "be16e75fe699664d",
+      "rule_id": "context-budget",
+      "file_path": "plugins/kubevirt/commands/review-enhancement.md",
+      "message": "Estimated 2,449 tokens exceeds command warn limit of 2,000",
+      "severity": "warning",
+      "value": 2449,
+      "baseline_mode": "ceiling"
+    },
+    {
+      "fingerprint": "1b0561eaaaa76464",
+      "rule_id": "context-budget",
+      "file_path": "plugins/kubevirt/commands/review-pr.md",
+      "message": "Estimated 2,018 tokens exceeds command warn limit of 2,000",
+      "severity": "warning",
+      "value": 2018,
+      "baseline_mode": "ceiling"
+    },
+    {
+      "fingerprint": "2174496ec39ee593",
+      "rule_id": "context-budget",
+      "file_path": "plugins/kubevirt/skills/create-eval-from-docs/SKILL.md",
+      "message": "Estimated 6,362 tokens exceeds skill error limit of 6,000",
+      "severity": "error",
+      "value": 6362,
+      "baseline_mode": "ceiling"
+    },
+    {
+      "fingerprint": "0ccdffdfa1ede310",
+      "rule_id": "context-budget",
+      "file_path": "plugins/kubevirt/skills/review-enhancement/SKILL.md",
+      "message": "Estimated 3,996 tokens exceeds skill warn limit of 3,000",
+      "severity": "warning",
+      "value": 3996,
+      "baseline_mode": "ceiling"
+    }
+  ]
+}

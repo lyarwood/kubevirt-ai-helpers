@@ -1,6 +1,6 @@
 ---
 description: Analyze overall CI health across merge-time jobs with failure trending
-argument-hint: [category] [--since <period>]
+argument-hint: "[category] [--since <period>]"
 ---
 
 ## Name
