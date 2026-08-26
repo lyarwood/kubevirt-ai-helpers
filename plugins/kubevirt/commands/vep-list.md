@@ -1,6 +1,6 @@
 ---
 description: List open KubeVirt Enhancement Proposals (VEPs) with status and filtering
-argument-hint: [--sig <sig>] [--release <version>] [--status <status>]
+argument-hint: "[--sig <sig>] [--release <version>] [--status <status>]"
 ---
 
 ## Name

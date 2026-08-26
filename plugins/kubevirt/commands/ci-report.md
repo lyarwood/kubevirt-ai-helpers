@@ -1,6 +1,6 @@
 ---
 description: Generate comprehensive CI health reports for stakeholders
-argument-hint: [--scope <scope>] [--format <format>]
+argument-hint: "[--scope <scope>] [--format <format>]"
 ---
 
 ## Name

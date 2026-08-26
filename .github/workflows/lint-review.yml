@@ -1,0 +1,15 @@
+name: Lint Review
+
+on:
+  workflow_run:
+    workflows: ["Lint"]
+    types: [completed]
+
+jobs:
+  review:
+    if: github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: stbenjam/skillsaw/review@2795ab65e00b36b475614c95bde217439eb676df # v0

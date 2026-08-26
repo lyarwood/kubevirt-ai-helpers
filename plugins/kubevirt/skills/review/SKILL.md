@@ -1,6 +1,6 @@
 ---
-name: KubeVirt Review Checklist
-description: Shared review checklist, conventions, and multi-pass methodology used by review and review-pr commands
+name: review
+description: Shared review checklist, conventions, and multi-pass methodology. Use when running /kubevirt:review or /kubevirt:review-pr to review KubeVirt code changes.
 ---
 
 # KubeVirt Review Checklist

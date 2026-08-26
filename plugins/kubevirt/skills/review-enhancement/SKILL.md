@@ -1,6 +1,6 @@
 ---
-name: Review Enhancement
-description: Detailed implementation guide for reviewing KubeVirt enhancement proposals for process compliance and technical quality
+name: review-enhancement
+description: Detailed implementation guide for reviewing KubeVirt enhancement proposals for process compliance and technical quality. Use when the /kubevirt:review-enhancement command runs to review a VEP.
 ---
 
 # Review Enhancement

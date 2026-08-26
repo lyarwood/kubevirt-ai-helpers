@@ -27,7 +27,7 @@
           "name": "ci-health",
           "description": "Analyze overall CI health across merge-time jobs with failure trending",
           "synopsis": "/kubevirt:ci-health [category] [--since <period>]",
-          "argument_hint": "[category] [--since <period>]"
+          "argument_hint": "\"[category] [--since <period>]\""
         },
         {
           "name": "ci-lane",
@@ -39,7 +39,7 @@
           "name": "ci-report",
           "description": "Generate comprehensive CI health reports for stakeholders",
           "synopsis": "/kubevirt:ci-report [--scope <scope>] [--format <format>] [--recipient <audience>]",
-          "argument_hint": "[--scope <scope>] [--format <format>]"
+          "argument_hint": "\"[--scope <scope>] [--format <format>]\""
         },
         {
           "name": "ci-search",
@@ -81,7 +81,7 @@
           "name": "review-list",
           "description": "List open PRs pending your review, filterable by user, SIG, or repo",
           "synopsis": "/kubevirt:review-list [username] [--sig <sig>] [--repo <repo>] [--limit <n>] [--order-by <field>]",
-          "argument_hint": "[username] [--sig <sig>] [--repo <repo>] [--limit <n>] [--order-by <field>]"
+          "argument_hint": "\"[username] [--sig <sig>] [--repo <repo>] [--limit <n>] [--order-by <field>]\""
         },
         {
           "name": "review-pr",
@@ -111,13 +111,13 @@
           "name": "vep-list",
           "description": "List open KubeVirt Enhancement Proposals (VEPs) with status and filtering",
           "synopsis": "/kubevirt:vep-list [--sig <sig>] [--release <version>] [--status <status>]",
-          "argument_hint": "[--sig <sig>] [--release <version>] [--status <status>]"
+          "argument_hint": "\"[--sig <sig>] [--release <version>] [--status <status>]\""
         },
         {
           "name": "vep-review-list",
           "description": "List VEP proposal and implementation PRs for VEPs you are assigned to review",
           "synopsis": "/kubevirt:vep-review-list [username] [--release <version>]",
-          "argument_hint": "[username] [--release <version>]"
+          "argument_hint": "\"[username] [--release <version>]\""
         },
         {
           "name": "vep-summary",
@@ -128,24 +128,24 @@
       ],
       "skills": [
         {
-          "name": "Create Eval from Docs",
+          "name": "create-eval-from-docs",
           "id": "create-eval-from-docs",
-          "description": "Detailed implementation guide for the /kubevirt:create-eval-from-docs command - generates MCPChecker evaluation tasks from KubeVirt user-guide documentation by extracting workflows, mapping to MCP tools, and producing v1alpha2 task YAML files"
+          "description": "Generates MCPChecker evaluation tasks from KubeVirt user-guide documentation by extracting workflows, mapping to MCP tools, and producing v1alpha2 task YAML files. Use when the /kubevirt:create-eval-from-docs command runs or when expanding eval coverage from user-guide docs."
         },
         {
-          "name": "KubeVirt Review Checklist",
+          "name": "review",
           "id": "review",
-          "description": "Shared review checklist, conventions, and multi-pass methodology used by review and review-pr commands"
+          "description": "Shared review checklist, conventions, and multi-pass methodology. Use when running /kubevirt:review or /kubevirt:review-pr to review KubeVirt code changes."
         },
         {
-          "name": "Review Enhancement",
+          "name": "review-enhancement",
           "id": "review-enhancement",
-          "description": "Detailed implementation guide for reviewing KubeVirt enhancement proposals for process compliance and technical quality"
+          "description": "Detailed implementation guide for reviewing KubeVirt enhancement proposals for process compliance and technical quality. Use when the /kubevirt:review-enhancement command runs to review a VEP."
         },
         {
-          "name": "VEP Find Reviewers",
+          "name": "vep-find-reviewers",
           "id": "vep-find-reviewers",
-          "description": "Detailed implementation guide for finding VEP reviewers via OWNERS_ALIASES and git history analysis"
+          "description": "Detailed implementation guide for finding VEP reviewers via OWNERS_ALIASES and git history analysis. Use when the /kubevirt:vep-find-reviewers command runs or when identifying candidate reviewers for a VEP."
         }
       ],
       "hooks": [],
