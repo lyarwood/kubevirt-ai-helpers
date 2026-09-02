@@ -1,6 +1,6 @@
 ---
-description: Review a KubeVirt enhancement proposal for process compliance and technical quality
-argument-hint: <vep-number>
+description: Review a KubeVirt enhancement proposal (VEP) PR for process compliance, technical quality, and accuracy against its implementation
+argument-hint: "<pr-number-or-url | vep-number>"
 ---
 
 ## Name
@@ -8,21 +8,33 @@ kubevirt:review-enhancement
 
 ## Synopsis
 ```
-/kubevirt:review-enhancement <vep-number>
+/kubevirt:review-enhancement <pr-number-or-url | vep-number>
 ```
 
 ## Description
-The `kubevirt:review-enhancement` command performs a comprehensive review of a KubeVirt Enhancement Proposal (VEP) combining process compliance checks with a multi-pass technical content review. It takes a VEP number, automatically resolves the tracking issue, proposal PRs, project board data, and implementation PRs, then evaluates the enhancement from both a process and technical reviewer perspective.
+The `kubevirt:review-enhancement` command performs a comprehensive review of a KubeVirt Enhancement Proposal (VEP) combining process compliance checks with a multi-pass technical content review. The primary input is an enhancements PR (number or URL); the command resolves the VEP it touches, the tracking issue, project board data, and implementation PRs, then evaluates the enhancement from both a process and technical reviewer perspective. A VEP number is also accepted and disambiguated automatically.
+
+All process and technical checks are grounded in the best practices **codified in the kubevirt/enhancements repository itself**, which the command reads live at review time (rather than relying on a hard-coded snapshot):
+
+- `README.md` -- the VEP process, responsibilities, labels, deadlines, and exceptions
+- `docs/feature-lifecycle.md` -- feature gates, graduation phases, and the release stage transition table
+- `veps/NNNN-vep-template/vep.md` -- required sections
+- `.github/PULL_REQUEST_TEMPLATE.md` -- the expected PR metadata
+
+The command distinguishes between two kinds of PR:
+
+- **New VEP** (the PR adds a new `veps/sig-*/NNNN-*/vep.md`): reviewed for completeness, design quality, and process compliance.
+- **Update to an existing VEP** (the PR modifies an existing `vep.md`, e.g. a graduation or design change): in addition to the above, the command reviews the **existing implementation code and PRs** to verify the VEP is still accurate -- that the proposal has not diverged from what was actually built, and that any stage bump (Alpha -> Beta -> GA) is backed by merged implementation as required by the feature lifecycle.
 
 This command uses the `review-enhancement` skill for detailed implementation guidance. See `plugins/kubevirt/skills/review-enhancement/SKILL.md`.
 
 ### Data Sources
 
-1. **Tracking Issue**: VEP tracking issue in kubevirt/enhancements
-2. **Proposal PR(s)**: VEP proposal PRs in kubevirt/enhancements
-3. **GitHub Projects**: Enhancement tracking projects for release planning
-4. **Implementation PRs**: Code PRs in kubevirt/kubevirt and other repos
-5. **VEP Template**: The official template for section completeness
+1. **Enhancements PR**: The VEP proposal/update PR under review in kubevirt/enhancements
+2. **Best-Practice Docs (read live)**: `README.md`, `docs/feature-lifecycle.md`, the VEP template, and the PR template from kubevirt/enhancements
+3. **Tracking Issue**: VEP tracking issue in kubevirt/enhancements
+4. **GitHub Projects**: Enhancement tracking projects for release planning
+5. **Implementation PRs and Code**: Code PRs and merged implementation in kubevirt/kubevirt and other repos (used to verify accuracy of VEP updates)
 
 ### Review Passes
 
@@ -80,6 +92,21 @@ A multi-pass review evaluating the proposal's technical merit:
    - Is the timeline realistic given the scope?
    - Are there dependencies on external projects (Kubernetes, libvirt, QEMU)?
 
+7. **VEP Accuracy vs Implementation Pass** (only for updates to existing VEPs)
+   - Does the updated VEP still accurately describe what was actually built? The
+     README states the VEP is the "single source of truth" and the SIG checklist
+     requires verifying the enhancement "is not diverging" and the implementation
+     "is not lacking behind the VEP."
+   - For a stage bump (Alpha -> Beta -> GA): are the referenced implementation
+     PRs actually merged? The feature lifecycle requires all implementation PRs
+     to be merged *before* the version-bump PR.
+   - Does the feature gate name, API shape, and defaulting in the VEP match the
+     merged code? Flag divergence between the proposal and the implementation.
+   - Are graduation criteria for the previous stage genuinely met by evidence
+     (merged tests, CI gating for Beta/GA, user feedback)?
+   - Is the Implementation History section updated to reference the relevant
+     implementation and bug-fix PRs?
+
 ### Review Categories
 Issues are categorized by severity:
 1. **Required**: Must be addressed before the VEP can be approved
@@ -92,45 +119,26 @@ This command uses the `review-enhancement` skill for detailed step-by-step imple
 
 ### Skill Reference
 The detailed implementation logic is in `plugins/kubevirt/skills/review-enhancement/SKILL.md`, which covers:
+- Resolving the input (enhancements PR or VEP number)
+- Reading best practices live from the enhancements repo
+- Detecting new-VEP vs update-to-existing-VEP PRs
 - Data gathering across all sources
 - How to perform each technical review pass
-- Specific patterns to look for in each VEP section
-- Cross-referencing design claims against implementation PRs
+- Verifying VEP accuracy against implementation code and PRs (for updates)
 - Severity classification guidelines
 
 ### High-Level Steps
 
-1. **Resolve VEP Data**: Fetch the tracking issue, find proposal PRs, query project board:
-   ```bash
-   # Fetch tracking issue
-   gh issue view <vep-number> --repo kubevirt/enhancements --json number,title,body,labels,assignees,state,comments,url
+See the skill for the exact commands. The flow is:
 
-   # Find proposal PRs
-   gh pr list --repo kubevirt/enhancements --search "VEP <vep-number>" --state all --json number,title,body,labels,state,files,url
-
-   # Discover and query enhancement tracking projects
-   gh project list --owner kubevirt --format json | jq '.projects[] | select(.title | contains("Enhancement"))'
-   ```
-
-2. **Fetch VEP Content**: Get the full VEP markdown:
-   ```bash
-   # From PR diff if open
-   gh pr diff <pr-number> --repo kubevirt/enhancements
-
-   # From repo if merged
-   gh api repos/kubevirt/enhancements/contents/veps/sig-<sig>/<number>-<slug>/vep.md --jq '.content' | base64 -d
-   ```
-
-3. **Fetch Implementation PRs**: Extract code PR links from the tracking issue body and check their status:
-   ```bash
-   gh pr view <pr-number> --repo kubevirt/kubevirt --json state,title,mergedAt,url
-   ```
-
-4. **Run Process Compliance Checks**: Verify template sections, tracking issue quality, project board status, labels, and DCO.
-
-5. **Run Technical Review Passes**: Execute each of the 6 technical review passes against the VEP content, cross-referencing with implementation PRs where available.
-
-6. **Generate Review Report**: Produce a structured report combining process and technical findings.
+1. **Resolve Input**: Accept an enhancements PR (number or URL) or a VEP number. From a PR, determine the VEP it touches and whether it is a **new VEP** (adds a `vep.md`) or an **update to an existing VEP** (modifies an existing `vep.md`).
+2. **Load Best Practices (live)**: Read `README.md`, `docs/feature-lifecycle.md`, the VEP template, and the PR template from kubevirt/enhancements so checks reflect the current process.
+3. **Resolve VEP Data**: Fetch the tracking issue and query the enhancement tracking projects.
+4. **Fetch VEP Content**: Get the VEP markdown (and, for updates, the before/after diff).
+5. **Fetch Implementation PRs and Code**: Check the status of linked code PRs; for updates, inspect the merged code to verify accuracy.
+6. **Run Process Compliance Checks**: Verify template sections, tracking issue quality, project board status, labels, and DCO against the live best-practice docs.
+7. **Run Technical Review Passes**: Execute the technical passes against the VEP content. For updates, also run the VEP Accuracy vs Implementation pass.
+8. **Generate Review Report**: Produce a structured report combining process, technical, and accuracy findings.
 
 ## Return Value
 A structured review report:
@@ -199,6 +207,13 @@ A structured review report:
 - **Suggestions**: Timeline targets GA in a single release cycle.
   Consider whether beta feedback period is sufficient.
 
+#### VEP Accuracy vs Implementation (updates only)
+- **Required**: The VEP bumps the stage to Beta, but implementation PR
+  kubevirt/kubevirt#12345 is still open. All implementation PRs must be
+  merged before the stage bump.
+- **Recommended**: The merged code names the feature gate `MyFeature` but
+  the VEP still refers to `MyFeatureGate`. Update the VEP to match.
+
 ---
 
 ### Summary
@@ -207,7 +222,10 @@ A structured review report:
 |----------|----------|-------------|-------------|
 | Process  | 2        | 1           | 0           |
 | Technical| 3        | 2           | 2           |
-| **Total**| **5**    | **3**       | **2**       |
+| Accuracy | 1        | 1           | 0           |
+| **Total**| **6**    | **4**       | **2**       |
+
+> The Accuracy row is only populated for PRs that update an existing VEP.
 
 ### Next Steps
 1. Address all Required items before requesting re-review
@@ -217,29 +235,36 @@ A structured review report:
 
 ## Examples
 
-1. **Review a VEP by number**:
+1. **Review an enhancements PR by number**:
+   ```
+   /kubevirt:review-enhancement 245
+   ```
+   Resolves PR #245, determines the VEP it touches and whether it is a new VEP
+   or an update, reads the live best-practice docs, and produces a combined
+   process, technical, and (for updates) accuracy review.
+
+2. **Review an enhancements PR by URL**:
+   ```
+   /kubevirt:review-enhancement https://github.com/kubevirt/enhancements/pull/245
+   ```
+   Same as above, accepting the full PR URL.
+
+3. **Review a graduation (stage-bump) PR**:
+   ```
+   /kubevirt:review-enhancement 260
+   ```
+   For a PR that bumps a VEP from Alpha to Beta, verifies that all referenced
+   implementation PRs are merged, the feature gate and API match the code, and
+   the previous stage's graduation criteria are genuinely met.
+
+4. **Review by VEP number**:
    ```
    /kubevirt:review-enhancement 190
    ```
-   Fetches VEP 190's tracking issue, proposal PR, project board data, and
-   implementation PRs, then produces a combined process and technical review.
-
-2. **Review a VEP before a SIG meeting**:
-   ```
-   /kubevirt:review-enhancement 62
-   ```
-   Generates a review report suitable for discussing the VEP's readiness at
-   a SIG meeting.
-
-3. **Re-review after revisions**:
-   ```
-   /kubevirt:review-enhancement 172
-   ```
-   Re-runs the full review to check whether previously identified issues
-   have been addressed.
+   Accepts a VEP number, finds its open proposal/update PR(s), and reviews them.
 
 ## Arguments
-- `<vep-number>`: (Required) The VEP number to review (e.g., `190`, `172`, `10`). This is the tracking issue number in kubevirt/enhancements.
+- `<pr-number-or-url | vep-number>`: (Required) Primarily an enhancements PR to review, given as a PR number (e.g., `245`) or full URL (e.g., `https://github.com/kubevirt/enhancements/pull/245`). A VEP number (the tracking issue number, e.g., `190`) is also accepted and disambiguated automatically. When both a PR and a VEP share the same number, the value is treated as a PR unless it is clearly a VEP tracking issue.
 
 ## See Also
 - `/kubevirt:vep-groom` - Process-focused grooming checklist for VEP PRs
