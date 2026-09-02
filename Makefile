@@ -5,7 +5,7 @@ CONTAINER_RUNTIME ?= $(shell command -v podman 2>/dev/null || echo docker)
 
 # skillsaw image (pinned version)
 SKILLSAW_VERSION := 0.18.0
-SKILLSAW_IMAGE = ghcr.io/stbenjam/skillsaw:v$(SKILLSAW_VERSION)
+SKILLSAW_IMAGE = ghcr.io/stbenjam/skillsaw:$(SKILLSAW_VERSION)
 
 .PHONY: help
 help: ## Show this help message
