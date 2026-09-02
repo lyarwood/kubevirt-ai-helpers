@@ -1,28 +1,87 @@
 ---
 name: review-enhancement
-description: Detailed implementation guide for reviewing KubeVirt enhancement proposals for process compliance and technical quality. Use when the /kubevirt:review-enhancement command runs to review a VEP.
+description: Detailed implementation guide for reviewing a KubeVirt enhancement proposal (VEP) PR for process compliance, technical quality, and accuracy against its implementation. Use when the /kubevirt:review-enhancement command runs to review a VEP or enhancements PR.
 ---
 
 # Review Enhancement
 
-This skill provides the detailed implementation logic for the `/kubevirt:review-enhancement` command. It covers how to gather all VEP data sources, perform process compliance checks, execute multi-pass technical review, and produce a structured review report.
+This skill provides the detailed implementation logic for the `/kubevirt:review-enhancement` command. It covers how to resolve the input (an enhancements PR or a VEP number), read best practices live from the enhancements repo, gather all VEP data sources, perform process compliance checks, execute a multi-pass technical review, verify that updates to existing VEPs stay accurate against their implementation, and produce a structured review report.
 
 ## When to Use This Skill
 
 - When executing the `/kubevirt:review-enhancement` command
-- When a user asks for a comprehensive review of a VEP proposal
+- When a user asks for a comprehensive review of a VEP proposal or an enhancements PR
+- When reviewing a VEP graduation / stage-bump PR and needing to confirm the implementation backs it
 - When preparing review feedback for a VEP before a SIG meeting or approval decision
 
 ## Prerequisites
 
 1. **gh CLI**: Must be installed and authenticated (`gh auth status`)
-2. **Network access**: Requires access to the GitHub API for fetching VEP content, tracking issues, project data, and implementation PRs
+2. **Network access**: Requires access to the GitHub API for fetching best-practice docs, VEP content, tracking issues, project data, and implementation PRs
+
+## Guiding Principle: Best Practices Come From the Repo
+
+Do not rely solely on the checklists baked into this skill. At review time, read the
+current best practices **live from the kubevirt/enhancements repository** so the
+review reflects the process as it stands today. The checks below encode the process
+as understood when this skill was written; the live docs are authoritative when they
+differ. See Step 0 for how to load them.
 
 ## Implementation Steps
 
+### Step 0: Resolve Input and Load Best Practices
+
+The command primarily takes an **enhancements PR** (number or URL), but also accepts
+a **VEP number**. Resolve which one was given, then load the live best-practice docs.
+
+#### 0a: Resolve the Input
+
+If the argument is a PR URL or a number that resolves to an open enhancements PR:
+```bash
+gh pr view <pr-number> --repo kubevirt/enhancements --json number,title,body,labels,state,files,url,headRefName,commits
+```
+From the PR's changed files, determine the VEP and the kind of change:
+- **New VEP**: the PR *adds* a `veps/sig-*/NNNN-*/vep.md` file.
+- **Update to an existing VEP**: the PR *modifies* an existing `veps/sig-*/NNNN-*/vep.md`
+  (e.g. a graduation/stage bump or a design change).
+
+Extract the VEP number from the VEP directory name (`NNNN-<slug>`) or from the PR
+title (the process requires PR titles to start with `VEP-<ID>`).
+
+If the argument is a VEP number with no matching PR path, treat it as a VEP number
+(see Step 1) and find its open proposal/update PR(s):
+```bash
+gh pr list --repo kubevirt/enhancements --search "VEP <vep-number>" --state all --json number,title,body,labels,state,files,url
+```
+
+Record the **change kind** (new vs update) -- it decides whether Step 5's Pass 7
+(VEP Accuracy vs Implementation) runs.
+
+#### 0b: Load Best-Practice Docs (live)
+
+Fetch the authoritative process and lifecycle docs from the enhancements repo:
+```bash
+for p in README.md docs/feature-lifecycle.md veps/NNNN-vep-template/vep.md .github/PULL_REQUEST_TEMPLATE.md; do
+  echo "===== $p ====="
+  gh api -H "Accept: application/vnd.github.raw" "repos/kubevirt/enhancements/contents/$p"
+done
+```
+Use these to drive the checks:
+- **README.md**: process steps, SIG ownership/sign-off, labels, deadlines (EF/CF),
+  exceptions, and the SIG checklist that the enhancement "is not diverging" and the
+  implementation "is not lacking behind the VEP".
+- **docs/feature-lifecycle.md**: feature-gate policy (and the weak reasons for omitting
+  one), graduation phases, and the release stage transition table (Alpha 1-2 releases,
+  Beta 1-3 releases; FG required for Alpha/Beta but not GA; Beta may only add fields,
+  not remove/rename; Alpha not CI-gating, Beta/GA CI-gating).
+- **veps/NNNN-vep-template/vep.md**: the current required sections (drive Step 4a from
+  this when it differs from the static list).
+- **.github/PULL_REQUEST_TEMPLATE.md**: the expected PR metadata (tracking issue link,
+  SIG label, update summary).
+
 ### Step 1: Resolve VEP Data
 
-Given a VEP number, gather all associated resources.
+Given a VEP number (resolved in Step 0), gather all associated resources.
 
 #### 1a: Fetch the Tracking Issue
 
@@ -154,6 +213,10 @@ This data feeds into the Implementation Feasibility pass.
 #### 4a: Template Section Completeness
 
 Parse the VEP markdown content and check for each required section. A section is present if a heading matching the name exists. A section is filled if it contains substantive content beyond template placeholders.
+
+Derive the required-section list from the **live template** fetched in Step 0b
+(`veps/NNNN-vep-template/vep.md`). The list below is the expected baseline; prefer the
+live template's headings when they differ.
 
 **Required sections** (check for headings):
 1. Release Signoff Checklist
@@ -318,6 +381,44 @@ Cross-reference the design against implementation PRs and timeline. Check:
   - Do merged PRs match the design?
   - Are there design divergences between proposal and implementation?
 
+#### Pass 7: VEP Accuracy vs Implementation (updates to existing VEPs only)
+
+Run this pass **only when Step 0 classified the PR as an update to an existing VEP**
+(a graduation/stage bump or a design change to an already-merged VEP). The goal is to
+confirm the VEP remains the "single source of truth" -- that it accurately reflects
+what was actually built and that any stage bump is genuinely earned.
+
+First gather the implementation state:
+
+```bash
+# Implementation PRs referenced by the tracking issue / VEP
+gh pr view <pr-number> --repo kubevirt/kubevirt --json number,title,state,mergedAt,url,files
+
+# The actual merged code: feature gate constant, API fields, defaulting
+gh search code --repo kubevirt/kubevirt "<feature-gate-name>"
+gh api -H "Accept: application/vnd.github.raw" "repos/kubevirt/kubevirt/contents/<path-to-featuregate-or-api>"
+```
+
+Then check, citing the specific VEP claim and the conflicting PR/file for each finding:
+
+- **Divergence between proposal and code**: Compare the VEP's Design, API Examples, and
+  feature-gate name against the merged implementation. Flag disagreements (renamed field,
+  different gate name, dropped sub-feature). Per the README, an implementation merged but
+  later ruled out by a VEP update risks reverts -- call this out.
+- **Stage bump is backed by merged code**: For an Alpha->Beta or Beta->GA bump, verify
+  *all* referenced implementation PRs are **merged** (the lifecycle requires this before
+  the version-bump PR). Flag open/unmerged PRs as Required.
+- **Graduation criteria genuinely met**: Check the previous stage's criteria against
+  evidence -- merged E2E/functional tests and CI gating (Beta/GA must be CI-gating, Alpha
+  must not). Flag criteria asserted as met without evidence.
+- **Beta/GA API stability**: For a Beta/GA bump, confirm the update only *adds* API fields
+  and does not remove/rename existing ones. Flag renames/removals.
+- **Feature gate lifecycle**: Alpha/Beta must keep the gate (default off for Alpha); a GA
+  bump should remove it. Flag mismatches between the VEP and the code.
+- **Implementation History and tracking issue in sync**: Confirm the update refreshes
+  Implementation History with the relevant PRs, and that the tracking issue references the
+  same PRs and current stage. Flag drift between issue, VEP, and code.
+
 ### Step 6: Generate Review Report
 
 Compile all findings into the structured report format defined in the command's Return Value section.
@@ -325,8 +426,9 @@ Compile all findings into the structured report format defined in the command's 
 **Ordering**:
 1. Overall assessment (Ready for Approval / Needs Revision / Major Concerns)
 2. Part A: Process & Template Compliance (tables and checklists)
-3. Part B: Technical Review (findings grouped by pass)
-4. Summary table (counts by category and severity)
+3. Part B: Technical Review (findings grouped by pass; include the VEP Accuracy vs
+   Implementation pass only for updates to existing VEPs)
+4. Summary table (counts by category and severity, including an Accuracy row for updates)
 5. Next Steps (actionable guidance)
 
 **Overall assessment heuristic**:
@@ -350,32 +452,50 @@ Compile all findings into the structured report format defined in the command's 
 | GitHub API rate limited | Report the rate limit error. Suggest the user wait or authenticate with a higher-limit token. |
 | VEP content too large for context | Focus technical review on the Design, API Examples, Scalability, and Update/Rollback sections. Note that a full review was not possible. |
 | Implementation PRs in external repos | Attempt to fetch PR metadata. If the repo is not accessible, note this and skip implementation progress checks. |
+| Best-practice docs cannot be fetched (network/404) | Fall back to the checklists baked into this skill and note that the review could not confirm against the live process docs. |
+| PR touches no `vep.md` file | Report that the PR does not appear to modify a VEP; ask the user to confirm the target, and treat as a process-only review. |
+| PR changes multiple VEPs | Review each VEP touched by the PR and produce a section per VEP. |
 
 ## Examples
 
-### Example 1: Review a Tracked VEP
+### Example 1: Review a New-VEP PR
 
 ```
-/kubevirt:review-enhancement 190
+/kubevirt:review-enhancement 245
 ```
 
-1. Fetches tracking issue #190 from kubevirt/enhancements
-2. Finds proposal PR(s) matching "VEP 190"
-3. Queries enhancement tracking projects for VEP 190 project board data
-4. Fetches VEP markdown content from the proposal PR
-5. Extracts linked code PRs from the tracking issue and checks their status
-6. Runs all process compliance checks
-7. Runs all 6 technical review passes
-8. Produces a combined review report with findings and next steps
+1. Resolves PR #245; sees it adds `veps/sig-compute/245-my-feature/vep.md` -> new VEP
+2. Loads the live best-practice docs (README, feature-lifecycle, template, PR template)
+3. Fetches the tracking issue and queries enhancement tracking projects
+4. Fetches the VEP markdown from the PR diff
+5. Runs all process compliance checks against the live docs
+6. Runs technical passes 1-6 (Pass 7 is skipped -- not an update)
+7. Produces a combined process and technical review report
 
-### Example 2: Review a VEP With No Project Board Entry
+### Example 2: Review a Graduation (Stage-Bump) PR
+
+```
+/kubevirt:review-enhancement 260
+```
+
+1. Resolves PR #260; sees it modifies an existing `vep.md` bumping Alpha -> Beta -> update
+2. Loads the live best-practice docs
+3. Fetches the tracking issue, project board data, and referenced implementation PRs
+4. Fetches the VEP before/after diff
+5. Runs process compliance and technical passes 1-6
+6. Runs Pass 7: confirms all implementation PRs are merged, the feature gate and API
+   match the merged code, Beta criteria (tests, CI gating) are met, and Implementation
+   History is updated
+7. Report includes an Accuracy section flagging any divergence or unmet criteria
+
+### Example 3: Review by VEP Number With No Project Board Entry
 
 ```
 /kubevirt:review-enhancement 195
 ```
 
-1. Fetches tracking issue #195
-2. Finds proposal PR
+1. Treats 195 as a VEP number; finds its open proposal PR
+2. Loads the live best-practice docs
 3. Searches projects but finds no entry -- reports as Required finding
 4. Continues with template and technical review
 5. Report highlights missing project tracking as a key gap

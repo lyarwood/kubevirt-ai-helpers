@@ -1,7 +1,7 @@
 {
   "version": "1",
   "generated_by": "skillsaw 0.18.0",
-  "generated_at": "2026-08-26T13:32:59.305578+00:00",
+  "generated_at": "2026-09-02T17:07:40.101263+00:00",
   "violations": [
     {
       "fingerprint": "af30f0fe6b1a444b",
@@ -25,9 +25,9 @@
       "fingerprint": "be16e75fe699664d",
       "rule_id": "context-budget",
       "file_path": "plugins/kubevirt/commands/review-enhancement.md",
-      "message": "Estimated 2,449 tokens exceeds command warn limit of 2,000",
+      "message": "Estimated 3,324 tokens exceeds command warn limit of 2,000",
       "severity": "warning",
-      "value": 2449,
+      "value": 3324,
       "baseline_mode": "ceiling"
     },
     {
@@ -52,9 +52,9 @@
       "fingerprint": "0ccdffdfa1ede310",
       "rule_id": "context-budget",
       "file_path": "plugins/kubevirt/skills/review-enhancement/SKILL.md",
-      "message": "Estimated 3,996 tokens exceeds skill warn limit of 3,000",
+      "message": "Estimated 5,790 tokens exceeds skill warn limit of 3,000",
       "severity": "warning",
-      "value": 3996,
+      "value": 5790,
       "baseline_mode": "ceiling"
     }
   ]
