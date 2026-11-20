@@ -1,7 +1,7 @@
 {
   "version": "1",
   "generated_by": "skillsaw 0.18.0",
-  "generated_at": "2026-09-02T17:07:40.101263+00:00",
+  "generated_at": "2026-11-20T10:18:56.138539+00:00",
   "violations": [
     {
       "fingerprint": "af30f0fe6b1a444b",
@@ -31,30 +31,21 @@
       "baseline_mode": "ceiling"
     },
     {
-      "fingerprint": "1b0561eaaaa76464",
+      "fingerprint": "3ae5d1c04e120f95",
       "rule_id": "context-budget",
-      "file_path": "plugins/kubevirt/commands/review-pr.md",
-      "message": "Estimated 2,018 tokens exceeds command warn limit of 2,000",
+      "file_path": "plugins/kubevirt/skills/review-enhancement-workflow/SKILL.md",
+      "message": "Estimated 5,792 tokens exceeds skill warn limit of 3,000",
       "severity": "warning",
-      "value": 2018,
+      "value": 5792,
       "baseline_mode": "ceiling"
     },
     {
-      "fingerprint": "2174496ec39ee593",
+      "fingerprint": "699728850ccdc5b0",
       "rule_id": "context-budget",
-      "file_path": "plugins/kubevirt/skills/create-eval-from-docs/SKILL.md",
-      "message": "Estimated 6,362 tokens exceeds skill error limit of 6,000",
+      "file_path": "plugins/kubevirt/skills/create-eval-from-docs-workflow/SKILL.md",
+      "message": "Estimated 6,364 tokens exceeds skill error limit of 6,000",
       "severity": "error",
-      "value": 6362,
-      "baseline_mode": "ceiling"
-    },
-    {
-      "fingerprint": "0ccdffdfa1ede310",
-      "rule_id": "context-budget",
-      "file_path": "plugins/kubevirt/skills/review-enhancement/SKILL.md",
-      "message": "Estimated 5,790 tokens exceeds skill warn limit of 3,000",
-      "severity": "warning",
-      "value": 5790,
+      "value": 6364,
       "baseline_mode": "ceiling"
     }
   ]
