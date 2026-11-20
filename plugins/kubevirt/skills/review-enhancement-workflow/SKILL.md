@@ -1,5 +1,5 @@
 ---
-name: review-enhancement
+name: review-enhancement-workflow
 description: Detailed implementation guide for reviewing a KubeVirt enhancement proposal (VEP) PR for process compliance, technical quality, and accuracy against its implementation. Use when the /kubevirt:review-enhancement command runs to review a VEP or enhancements PR.
 ---
 
