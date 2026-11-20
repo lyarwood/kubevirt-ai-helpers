@@ -17,11 +17,21 @@ Review local branch changes using KubeVirt project coding conventions and review
 
 #### `/kubevirt:review-pr`
 
-Review a GitHub pull request using the `gh` CLI, applying KubeVirt project coding conventions and reviewer guidelines. Fetches PR diff, metadata, commit history, and existing discussion directly from GitHub without requiring a local checkout. Optionally submit the review as a comment on the PR.
+Review a GitHub pull request using the `gh` CLI, applying KubeVirt project coding conventions and reviewer guidelines. Fetches PR diff, metadata, commit history, and existing discussion directly from GitHub without requiring a local checkout. Optionally adds inline comments to a pending review, which you submit yourself.
 
 **Usage:**
 ```bash
-/kubevirt:review-pr <pr-number-or-url> [--submit] [--approve] [--request-changes]
+/kubevirt:review-pr <pr-number-or-url>
+```
+
+Both review commands use the `review-workflow` skill and its `review_helper.py` (needs `python3` and an authenticated `gh`). The helper never submits a review. To also stop the agent from submitting one by itself, you can add deny rules, e.g. in Claude Code settings. The helper runs `gh` itself, so they do not affect it. The `graphql` rule also covers the GraphQL submit mutations, at the cost of the skill's manual fallback:
+
+```json
+{
+  "permissions": {
+    "deny": ["Bash(gh pr review *)", "Bash(gh pr comment *)", "Bash(gh api *events*)", "Bash(gh api graphql *)"]
+  }
+}
 ```
 
 #### `/kubevirt:lint`
@@ -82,10 +92,11 @@ Review a VEP proposal PR against template requirements, process guidelines, and 
 /kubevirt:review-pr 12345
 ```
 
-### Reviewing and submitting feedback on a PR
+### Reviewing a PR and adding pending comments
 ```bash
-/kubevirt:review-pr https://github.com/kubevirt/kubevirt/pull/12345 --submit
+/kubevirt:review-pr https://github.com/kubevirt/kubevirt/pull/12345
 ```
+After the report, agree to add the comments, then submit the pending review on GitHub.
 
 ### Reviewing changes before submitting a PR
 ```bash

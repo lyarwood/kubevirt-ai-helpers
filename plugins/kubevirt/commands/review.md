@@ -12,74 +12,21 @@ kubevirt:review
 ```
 
 ## Description
-The `kubevirt:review` command performs a comprehensive code review of changes on the current local branch compared to a base branch, applying KubeVirt project coding conventions and reviewer guidelines.
+The `kubevirt:review` command reviews the changes on the current local branch against a base branch, applying KubeVirt coding conventions and reviewer guidelines.
 
-If the current branch has an open pull request on GitHub, the command also evaluates PR metadata (title, description, labels, size), reads existing review discussion to avoid duplicating points, and offers to post inline review comments as a PENDING GitHub review.
+If the branch has an open pull request, the command also evaluates PR metadata, reads the existing discussion to avoid repeating points, and offers to add inline comments as a PENDING review. Comments can only be posted when the PR is open and the local HEAD is the PR head, so the line numbers match.
 
-This command simulates a thorough code review following the KubeVirt multi-pass review approach. Read the shared review checklist at `plugins/kubevirt/skills/review/SKILL.md` for the full list of review areas, conventions, and output formatting rules.
-
-### Review Passes
-1. **General Design Pass**: Verify the overall design makes sense and code structure is consistent with the project
-2. **Detailed Code Pass**: In-depth analysis of the implementation
-3. **Standards Compliance Pass**: Check adherence to KubeVirt coding conventions
-4. **Commit History Pass**: Review commit structure and messages
-5. **PR Metadata Pass** (when PR detected): Evaluate PR title, description, labels, and overall scope
+The workflow is defined in the `review-workflow` skill of this plugin (`kubevirt:review-workflow`, file `skills/review-workflow/SKILL.md` in the plugin). Load that skill first. Its helper script does all fetching, filtering, line mapping and posting, so you only do the review itself.
 
 ## Implementation
 
-### Phase 1: Gather Changes
-1. Determine the base branch (defaults to `main`, falls back to `master`)
-2. Run `git diff <base-branch>...HEAD` to get all changes on the current branch
-3. Run `git log <base-branch>...HEAD` to understand commit history and structure
-4. Prioritize files for review using the file priority order from the shared review checklist
-
-### Phase 1b: Detect Associated PR
-1. Check if the current branch has an open pull request:
-   ```
-   gh pr list --head $(git branch --show-current) \
-     --json number,title,body,labels,state,isDraft,additions,deletions,changedFiles,comments,reviews \
-     --jq '.[0]'
-   ```
-2. If a PR exists:
-   - Record the PR number and metadata for use in later phases
-   - Evaluate PR metadata (title, description, labels, size, draft status) using the PR Metadata checklist from the shared skill
-   - Flag PRs that are too large (>500 lines changed across many files) and suggest splitting
-   - Fetch existing discussion:
-     - Use `gh api repos/<owner>/<repo>/pulls/<number>/comments` to read all inline review comments with file paths, line numbers, and body text
-     - Read and understand the substance of each comment - do not just note that comments exist
-     - When generating the review report, do NOT duplicate points already raised in existing comments
-     - Note which existing comments have been addressed by subsequent commits and which remain unresolved
-3. If no PR exists:
-   - Skip PR metadata evaluation
-   - Note in the report that PR metadata could not be evaluated (no open PR found for this branch)
-
-### Phase 2: Analyze Changes (Multi-Pass)
-1. Perform the multi-pass review against the diff following the methodology in the shared review checklist:
-   - **General Design Pass**: Overall design and architecture
-   - **Detailed Code Pass**: Line-by-line implementation review, considering context of surrounding code. Use the Read tool to read full files when the diff alone does not provide enough context.
-   - **Standards Compliance Pass**: KubeVirt coding conventions
-2. For each issue found, note the file path and relevant diff context
-3. Categorize findings by severity
-
-### Phase 3: Review Commit History
-1. Evaluate commit messages for clarity and conventional format
-2. Check for problematic patterns (fixup commits, merge commits, WIP commits)
-3. Assess whether changes are in scope or should be split into separate PRs
-
-### Phase 4: Generate Review Report
-1. Create a structured review report following the output formatting rules from the shared review checklist
-2. Organize feedback by severity: Critical Issues, Suggestions, Nitpicks, Positive Observations
-3. If a PR was detected in Phase 1b:
-   - Include PR Overview (title, author, size stats, draft status, labels)
-   - Include Existing Discussion Summary (key points from prior reviews)
-   - Include Verdict (recommended action: approve, request changes, or comment)
-
-### Phase 5: Offer to Add Review Comments on GitHub
-This phase only applies when a PR was detected in Phase 1b. If no PR was found, skip this phase entirely.
-
-IMPORTANT: After presenting the review report, you MUST proceed to Phase 5. Do not wait for the user to ask.
-
-Follow the GitHub Review Interaction process defined in `plugins/kubevirt/skills/review/SKILL.md` to offer, prepare, and post review comments. The `line` field must use source file line numbers from the git diff.
+1. **Load the `review-workflow` skill** and follow it.
+2. **Fetch**: `HELPER fetch --local [--base <base-branch>]` as described in the skill, run from the repository root, passing `--root` when your environment provides a scratch directory. Without `--base`, the PR merge base is used, otherwise the most recent of `upstream`, `origin` and local `main` or `master`. Note the printed `dir`.
+3. **Read** `meta.md`, `checks.md`, `discussion.md` (only when a PR exists), `vep.md` (if present), both docs and `diff.patch`, in the order the skill gives. Read local files directly when the diff lacks context.
+4. **Review** with the three passes and the VEP cross-reference from the skill. Skip points already raised in `discussion.md`.
+5. **Report** using the skill's categories and ASCII rules, including the "Not Reviewed Line by Line" section. Without a PR, note that PR metadata could not be evaluated.
+6. **Offer comments**: only when a PR exists and `meta.md` does not say `no posting`. IMPORTANT - after the report, continue to this step without waiting to be asked. If there are new inline comments, offer to add them as a pending review and wait for agreement.
+7. **Post** after agreement: write `findings.json`, run `resolve` until it passes, then `post`. Never submit the review.
 
 ## Return Value
 A structured code review report containing:
@@ -90,6 +37,7 @@ A structured code review report containing:
 - **Nitpicks**: Minor style or convention issues
 - **Positive Observations**: Good practices worth noting
 - **Commit History Feedback**: Commit organization and message quality
+- **Not Reviewed Line by Line**: Generated or bulk files only seen as a summary
 
 When a PR is detected, the report also includes:
 
@@ -120,7 +68,7 @@ When a PR is detected, the report also includes:
    Reviews the feature branch changes against main.
 
 ## Arguments
-- `[base-branch]`: (Optional) Branch to compare against. Defaults to `main`, falls back to `master` if main doesn't exist.
+- `[base-branch]`: (Optional) Branch to compare against. Defaults to the merge base of the branch's PR, otherwise the most recent of `upstream/main`, `origin/main` and `main` (then the same for `master`).
 
 ## See Also
 - `/kubevirt:review-pr` - Review a remote GitHub PR by number or URL (no local checkout required)

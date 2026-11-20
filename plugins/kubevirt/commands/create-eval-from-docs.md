@@ -46,7 +46,7 @@ The generated tasks test agent use of these MCP tools:
 
 ## Implementation
 
-Refer to the detailed implementation guide in `plugins/kubevirt/skills/create-eval-from-docs/SKILL.md` for step-by-step instructions.
+Load the `create-eval-from-docs-workflow` skill (`kubevirt:create-eval-from-docs-workflow`) and follow its step-by-step instructions.
 
 ### Step 1: Parse Input
 

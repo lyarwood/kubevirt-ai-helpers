@@ -30,6 +30,15 @@ lint-pull: ## Pull the pinned skillsaw image
 	@echo "Pulling skillsaw image $(SKILLSAW_IMAGE)..."
 	$(CONTAINER_RUNTIME) pull $(SKILLSAW_IMAGE)
 
+.PHONY: py-lint
+py-lint: ## Lint and format-check plugin Python code with ruff
+	ruff check plugins/
+	ruff format --check plugins/
+
+.PHONY: py-test
+py-test: ## Run plugin Python unit tests
+	find plugins -name 'test_*.py' -exec python3 -B -m unittest {} +
+
 .PHONY: update
 update: ## Update plugin documentation and website data
 	@echo "Updating plugin documentation..."
