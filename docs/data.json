@@ -128,13 +128,13 @@
       ],
       "skills": [
         {
-          "name": "create-eval-from-docs",
-          "id": "create-eval-from-docs",
+          "name": "create-eval-from-docs-workflow",
+          "id": "create-eval-from-docs-workflow",
           "description": "Generates MCPChecker evaluation tasks from KubeVirt user-guide documentation by extracting workflows, mapping to MCP tools, and producing v1alpha2 task YAML files. Use when the /kubevirt:create-eval-from-docs command runs or when expanding eval coverage from user-guide docs."
         },
         {
-          "name": "review-enhancement",
-          "id": "review-enhancement",
+          "name": "review-enhancement-workflow",
+          "id": "review-enhancement-workflow",
           "description": "Detailed implementation guide for reviewing a KubeVirt enhancement proposal (VEP) PR for process compliance, technical quality, and accuracy against its implementation. Use when the /kubevirt:review-enhancement command runs to review a VEP or enhancements PR."
         },
         {
@@ -143,8 +143,8 @@
           "description": "Shared review checklist, conventions, helper workflow and posting rules. Use when running /kubevirt:review or /kubevirt:review-pr to review KubeVirt code changes."
         },
         {
-          "name": "vep-find-reviewers",
-          "id": "vep-find-reviewers",
+          "name": "vep-find-reviewers-workflow",
+          "id": "vep-find-reviewers-workflow",
           "description": "Detailed implementation guide for finding VEP reviewers via OWNERS_ALIASES and git history analysis. Use when the /kubevirt:vep-find-reviewers command runs or when identifying candidate reviewers for a VEP."
         }
       ],

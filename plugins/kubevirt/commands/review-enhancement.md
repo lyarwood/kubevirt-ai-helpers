@@ -26,7 +26,7 @@ The command distinguishes between two kinds of PR:
 - **New VEP** (the PR adds a new `veps/sig-*/NNNN-*/vep.md`): reviewed for completeness, design quality, and process compliance.
 - **Update to an existing VEP** (the PR modifies an existing `vep.md`, e.g. a graduation or design change): in addition to the above, the command reviews the **existing implementation code and PRs** to verify the VEP is still accurate -- that the proposal has not diverged from what was actually built, and that any stage bump (Alpha -> Beta -> GA) is backed by merged implementation as required by the feature lifecycle.
 
-This command uses the `review-enhancement` skill for detailed implementation guidance. See `plugins/kubevirt/skills/review-enhancement/SKILL.md`.
+This command uses the `review-enhancement-workflow` skill (`kubevirt:review-enhancement-workflow`, file `skills/review-enhancement-workflow/SKILL.md` in the plugin) for detailed implementation guidance. Load it first.
 
 ### Data Sources
 
@@ -115,10 +115,10 @@ Issues are categorized by severity:
 
 ## Implementation
 
-This command uses the `review-enhancement` skill for detailed step-by-step implementation guidance. Below is the high-level flow.
+Below is the high-level flow; the skill has the step-by-step details.
 
 ### Skill Reference
-The detailed implementation logic is in `plugins/kubevirt/skills/review-enhancement/SKILL.md`, which covers:
+The detailed implementation logic is in the `review-enhancement-workflow` skill, which covers:
 - Resolving the input (enhancements PR or VEP number)
 - Reading best practices live from the enhancements repo
 - Detecting new-VEP vs update-to-existing-VEP PRs

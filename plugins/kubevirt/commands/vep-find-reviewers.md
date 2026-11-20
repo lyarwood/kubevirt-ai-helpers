@@ -35,7 +35,7 @@ For each candidate reviewer:
 
 ### Skill Reference
 
-This command uses the `vep-find-reviewers` skill for detailed implementation guidance on parsing OWNERS_ALIASES files and analyzing git history. See `plugins/kubevirt/skills/vep-find-reviewers/SKILL.md`.
+This command uses the `vep-find-reviewers-workflow` skill (`kubevirt:vep-find-reviewers-workflow`, file `skills/vep-find-reviewers-workflow/SKILL.md` in the plugin) for detailed implementation guidance on parsing OWNERS_ALIASES files and analyzing git history. Load it first.
 
 ## Implementation
 
@@ -47,7 +47,7 @@ This command uses the `vep-find-reviewers` skill for detailed implementation gui
    ```bash
    gh api repos/kubevirt/kubevirt/contents/OWNERS_ALIASES --jq '.content' | base64 -d
    ```
-   Parse the YAML to extract members of relevant aliases (e.g., `sig-compute-reviewers`, `sig-compute-approvers`). See the `vep-find-reviewers` skill for the full alias naming conventions and parsing details.
+   Parse the YAML to extract members of relevant aliases (e.g., `sig-compute-reviewers`, `sig-compute-approvers`). See the `vep-find-reviewers-workflow` skill for the full alias naming conventions and parsing details.
 
 3. **Fetch directory-level OWNERS files** (optional, when code areas are known): If the VEP proposal or its tracking issue references specific packages or directories, fetch OWNERS files from those paths:
    ```bash
@@ -60,7 +60,7 @@ This command uses the `vep-find-reviewers` skill for detailed implementation gui
    gh api "repos/kubevirt/kubevirt/commits?path=<path>&since=<date>&per_page=100" \
      --jq '.[].author.login'
    ```
-   Aggregate by author, counting commits and finding the most recent activity date. See the `vep-find-reviewers` skill for details on path heuristics and SIG-to-directory mappings.
+   Aggregate by author, counting commits and finding the most recent activity date. See the `vep-find-reviewers-workflow` skill for details on path heuristics and SIG-to-directory mappings.
 
 5. **Cross-reference and rank**: Merge the two sources:
    - People appearing in both OWNERS_ALIASES and recent git history are ranked highest
