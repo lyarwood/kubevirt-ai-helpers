@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
-"""Deterministic helpers for KubeVirt code reviews.
+"""Deterministic helpers for KubeVirt code reviews of GitHub PRs and GitLab MRs.
 
-fetch    collect PR or branch data into compact files for the reviewer
+fetch    collect PR, MR or branch data into compact files for the reviewer
 show     print a file at the reviewed commit with source line numbers
 resolve  turn anchored findings into diff line positions
-post     add resolved findings to the user's PENDING review
+post     add resolved findings to the user's PENDING review or draft notes
 
-The script never submits a review. REST calls go through rest_get(), which is
-GET only, and graphql() refuses every mutation except the two that add to a
-pending review.
+The script never submits a review or publishes draft notes. GitHub REST calls
+go through rest_get(), which is GET only, and graphql() refuses every mutation
+except the two that add to a pending review. GitLab calls go through
+gitlab_get(), which is GET only, and gitlab_post_draft(), which only creates
+draft notes.
 """
 
 from __future__ import annotations
 
 import argparse
+import functools
 import getpass
+import hashlib
 import json
 import os
 import re
@@ -55,7 +59,7 @@ CATEGORIES = {
 }
 
 GENERATED_HEADER = re.compile(r"^// Code generated .* DO NOT EDIT\.$", re.MULTILINE)
-HUNK_HEADER = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
+HUNK_HEADER = re.compile(r"^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@")
 DIFF_HEADER = re.compile(r"^diff --git a/(.+) b/(.+)$")
 MODULE_LINE = re.compile(r"^# (\S+) (.+)$")
 HIDDEN_CHARS = re.compile("[\u200b-\u200f\u202a-\u202e\u2060\u2066-\u2069\ufeff]")
@@ -74,6 +78,17 @@ PROSE_DASH = re.compile(r"(?<!-)--(?![-\w])")
 API_PATH = re.compile(r"(^|/)apis?/|^staging/src/[^/]+/[^/]+-api/")
 # The first vendor dir of a path, also below the repo root like api/vendor/
 VENDOR_ROOT = re.compile(r"^(?:.*?/)?vendor/")
+GITHUB_REFS = (
+    re.compile(r"github\.com/([^/]+)/([^/]+)/pull/(\d+)"),
+    re.compile(r"^([^/\s]+)/([^#\s]+)#(\d+)$"),
+)
+MR_URL = re.compile(r"^https?://([^/\s]+)/(\S+?)/-/merge_requests/(\d+)")
+MR_SHORT = re.compile(r"^([\w.-]+(?:/[\w.-]+)+)!(\d+)$")
+# the only GitLab write: creating a draft note, never publishing one
+DRAFT_NOTES = re.compile(r"projects/[^/?#]+/merge_requests/\d+/draft_notes")
+# GitLab project, group and service account bots, plus names like review-bot
+GITLAB_BOT = re.compile(r"^(?:project|group)_\d+_bot|(?:^|[-_])bot\d*$")
+MR_STATES = {"opened": "OPEN", "merged": "MERGED", "closed": "CLOSED", "locked": "CLOSED"}
 
 
 class Failure(Exception):
@@ -149,6 +164,76 @@ def require_gh() -> None:
         raise Failure("gh is not authenticated, run: gh auth login") from error
 
 
+@functools.cache
+def gh_available() -> bool:
+    """Whether gh can fetch the GitHub extras of a GitLab review (docs, VEPs)."""
+    try:
+        require_gh()
+    except Failure:
+        return False
+    return True
+
+
+# --- glab access ----------------------------------------------------------------
+
+
+def glab(*args: str, stdin: str | None = None) -> str:
+    """Only called by gitlab_get(), gitlab_post_draft(), require_glab() and default_host()."""
+    return run(["glab", *args], stdin)
+
+
+def gitlab_get(host: str, endpoint: str, raw: bool = False):
+    """GET an endpoint, parsed as JSON unless raw."""
+    text = glab("api", "--hostname", host, "--method", "GET", endpoint)
+    return text if raw else json.loads(text)
+
+
+def gitlab_pages(host: str, endpoint: str) -> list:
+    """All items of a paginated list endpoint."""
+    items: list = []
+    separator = "&" if "?" in endpoint else "?"
+    for page in range(1, 10_000):
+        batch = gitlab_get(host, f"{endpoint}{separator}per_page=100&page={page}")
+        items += batch
+        if len(batch) < 100:
+            break
+    return items
+
+
+def gitlab_post_draft(host: str, endpoint: str, payload: dict) -> dict:
+    """Create a draft note, the only GitLab write. Nothing here can publish."""
+    if not DRAFT_NOTES.fullmatch(endpoint):
+        raise Failure("refusing a GitLab write that does not create a draft note")
+    text = glab(
+        "api", "--hostname", host, "--method", "POST", "-H", "Content-Type: application/json",
+        "--input", "-", endpoint, stdin=json.dumps(payload),
+    )  # fmt: skip
+    return json.loads(text)
+
+
+def require_glab(host: str) -> None:
+    if not shutil.which("glab"):
+        raise Failure("glab is not installed, see https://gitlab.com/gitlab-org/cli")
+    try:
+        glab("auth", "status", "--hostname", host)
+    except Failure as error:
+        login = f"glab auth login --hostname {host}"
+        raise Failure(f"glab is not authenticated, run: {login}") from error
+
+
+def default_host() -> str:
+    """The GitLab host for owner/repo!N references, as glab would pick it."""
+    if host := os.environ.get("GITLAB_HOST"):
+        return re.sub(r"^https?://", "", host).rstrip("/")
+    if shutil.which("glab"):
+        try:
+            if host := glab("config", "get", "host").strip():
+                return host
+        except Failure:
+            pass
+    return "gitlab.com"
+
+
 # --- pull request data ----------------------------------------------------------
 
 
@@ -163,17 +248,48 @@ class PrRef:
         return f"{self.owner}/{self.name}"
 
     @property
+    def display(self) -> str:
+        return f"{self.repo}#{self.number}"
+
+    @property
     def variables(self) -> dict:
         return {"owner": self.owner, "name": self.name, "number": self.number}
 
 
-def parse_pr_ref(ref: str) -> PrRef:
+@dataclass(frozen=True)
+class MrRef:
+    """A GitLab merge request, the project path may contain subgroups."""
+
+    host: str
+    repo: str
+    number: int
+
+    @property
+    def display(self) -> str:
+        return f"{self.repo}!{self.number}"
+
+    @property
+    def project(self) -> str:
+        return f"projects/{url_quote(self.repo, safe='')}"
+
+    @property
+    def api(self) -> str:
+        return f"{self.project}/merge_requests/{self.number}"
+
+
+def parse_pr_ref(ref: str) -> PrRef | MrRef:
     if ref.isdigit():
         return PrRef("kubevirt", "kubevirt", int(ref))
-    for pattern in (r"github\.com/([^/]+)/([^/]+)/pull/(\d+)", r"^([^/\s]+)/([^#\s]+)#(\d+)$"):
-        if match := re.search(pattern, ref):
+    for pattern in GITHUB_REFS:
+        if match := pattern.search(ref):
             return PrRef(match[1], match[2], int(match[3]))
-    raise Failure(f"cannot parse PR reference {ref!r}, use 123, owner/repo#123 or a URL")
+    if match := MR_URL.search(ref):
+        return MrRef(match[1], match[2], int(match[3]))
+    if match := MR_SHORT.search(ref):
+        return MrRef(default_host(), match[1], int(match[2]))
+    raise Failure(
+        f"cannot parse PR reference {ref!r}, use 123, owner/repo#123, group/project!123 or a URL"
+    )
 
 
 AUTHOR = "author { login __typename }"
@@ -372,6 +488,150 @@ def files_diff(ref: PrRef, expected: int) -> tuple[str, list[str]]:
     return "".join(chunks), gaps
 
 
+# --- merge request data ---------------------------------------------------------
+
+
+def gitlab_author(user: dict | None) -> dict | None:
+    """A GitLab user in the shape of a GitHub author."""
+    if not user:
+        return None
+    bot = user.get("bot") or GITLAB_BOT.search(user["username"])
+    return {"login": user["username"], "__typename": "Bot" if bot else "User"}
+
+
+def draft_comment(draft: dict) -> dict:
+    position = draft.get("position") or {}
+    return {
+        "path": position.get("new_path") or position.get("old_path") or "(general)",
+        "line": position.get("new_line"),
+        "originalLine": position.get("old_line"),
+        "body": draft["note"],
+    }
+
+
+def mr_info(ref: MrRef) -> dict:
+    """MR metadata plus your draft notes, without discussions and commits."""
+    mr = gitlab_get(ref.host, ref.api)
+    drafts = gitlab_pages(ref.host, f"{ref.api}/draft_notes")
+    return {
+        "ref": ref,
+        "id": mr["id"],
+        "url": mr["web_url"],
+        "title": mr["title"],
+        "body": mr["description"],
+        "state": MR_STATES.get(mr["state"], mr["state"].upper()),
+        "isDraft": mr["draft"],
+        "author": mr["author"]["username"],
+        # GitLab has no author association, only this flag
+        "authorAssociation": "FIRST_TIMER" if mr.get("first_contribution") else "CONTRIBUTOR",
+        "baseRefName": mr["target_branch"],
+        "headRefName": mr["source_branch"],
+        "headRefOid": mr["sha"],
+        "diffRefs": mr["diff_refs"],
+        "changedFiles": mr["changes_count"],
+        "labels": mr["labels"],
+        "pending_comments": [draft_comment(draft) for draft in drafts],
+    }
+
+
+def mr_threads(discussions: list[dict], head: str) -> tuple[list[dict], list[dict]]:
+    """Split discussions into GitHub-shaped review threads and plain comments."""
+    threads, comments = [], []
+    for discussion in discussions:
+        notes = [
+            {"author": gitlab_author(note["author"]), "body": note["body"], "state": "SUBMITTED"}
+            | {key: note.get(key) for key in ("position", "resolvable", "resolved")}
+            for note in discussion["notes"]
+            if not note["system"]
+        ]
+        position = notes[0]["position"] if notes else None
+        if not position:
+            comments += notes
+            continue
+        threads.append(
+            {
+                "isResolved": all(n.get("resolved") for n in notes if n.get("resolvable")),
+                "isOutdated": position["head_sha"] != head,
+                "path": position["new_path"] or position["old_path"],
+                "line": position.get("new_line"),
+                "originalLine": position.get("old_line"),
+                "comments": {"totalCount": len(notes), "nodes": notes},
+            }
+        )
+    return threads, comments
+
+
+def fetch_mr(ref: MrRef) -> dict:
+    info = mr_info(ref)
+    if info["diffRefs"]["head_sha"] != info["headRefOid"]:
+        raise Failure("GitLab has not updated the MR diff to its head yet, run fetch again")
+    # GitLab lists the newest commit first
+    commits = [
+        {
+            "oid": commit["short_id"],
+            "subject": commit["title"],
+            "body": commit["message"].partition("\n")[2].strip("\n"),
+            "parents": len(commit.get("parent_ids") or []),
+        }
+        for commit in reversed(gitlab_pages(ref.host, f"{ref.api}/commits"))
+    ]
+    discussions = gitlab_pages(ref.host, f"{ref.api}/discussions")
+    threads, comments = mr_threads(discussions, info["headRefOid"])
+    lists = {"reviewThreads": threads, "comments": comments, "reviews": []}
+    return {**info, **lists, "commits": commits}
+
+
+def mr_diff(mr: dict) -> tuple[str, list[str]]:
+    """Assemble the MR diff per file and list what it lacks.
+
+    Refuses when the head moved meanwhile, so the diff matches mr["headRefOid"].
+    """
+    ref = mr["ref"]
+    items = gitlab_pages(ref.host, f"{ref.api}/diffs")
+    chunks, gaps = [], []
+    expected = mr["changedFiles"]
+    if not str(expected).isdigit():  # "1000+" for very large MRs
+        gaps.append(f"GitLab reports {expected} changed files, the diff may be incomplete")
+    elif len(items) < int(expected):
+        gaps.append(f"{int(expected) - len(items)} of {expected} changed files missing")
+    for item in items:
+        old, path = item["old_path"], item["new_path"]
+        added, deleted = item["new_file"], item["deleted_file"]
+        modes, header = (item["a_mode"], item["b_mode"]), []
+        if added:
+            header.append(f"new file mode {modes[1]}")
+        elif deleted:
+            header.append(f"deleted file mode {modes[0]}")
+        elif modes[0] != modes[1]:
+            header += [f"old mode {modes[0]}", f"new mode {modes[1]}"]
+        if item["renamed_file"]:
+            header += [f"rename from {old}", f"rename to {path}"]
+        body = item["diff"]
+        body += "" if not body or body.endswith("\n") else "\n"
+        # pure renames and mode changes have no diff, anything else lost content
+        lost = not (body or item["renamed_file"] or "old mode" in "".join(header))
+        if item.get("too_large") or item.get("collapsed") or lost:
+            gaps.append(f"{path}: no diff from GitLab (binary, too large or collapsed)")
+        src = "/dev/null" if added else f"a/{old}"
+        dst = "/dev/null" if deleted else f"b/{path}"
+        lines = "".join(f"{line}\n" for line in [f"diff --git a/{old} b/{path}", *header])
+        chunks.append(f"{lines}--- {src}\n+++ {dst}\n{body}")
+    if gitlab_get(ref.host, ref.api)["sha"] != mr["headRefOid"]:
+        raise Failure("the MR head moved during fetch, run fetch again")
+    return "".join(chunks), gaps
+
+
+def gitlab_file(ref: MrRef, rev: str, path: str) -> str | None:
+    """The full text of path at rev, None if it does not exist."""
+    endpoint = f"{ref.project}/repository/files/{url_quote(path, safe='')}/raw?ref={rev}"
+    try:
+        return gitlab_get(ref.host, endpoint, raw=True)
+    except Failure as error:
+        if http_status(error, 404):
+            return None
+        raise
+
+
 # --- diff parsing ---------------------------------------------------------------
 
 
@@ -379,9 +639,11 @@ def files_diff(ref: PrRef, expected: int) -> tuple[str, list[str]]:
 class FileDiff:
     path: str
     text: str
+    old_path: str = ""
     added: list[tuple[int, str]] = field(default_factory=list)
     removed: list[str] = field(default_factory=list)
-    lines: dict[int, tuple[int, str]] = field(default_factory=dict)  # line: (hunk, text)
+    # new line: (hunk, text, old line, added), for added lines the next old line
+    lines: dict[int, tuple[int, str, int, bool]] = field(default_factory=dict)
     binary: bool = False
     executable: bool = False
     new: bool = False
@@ -401,25 +663,31 @@ def parse_file(chunk: str) -> FileDiff:
     # split("\n"), not splitlines(): Unicode line separators are line content
     header, *body = chunk.rstrip("\n").split("\n")
     match = DIFF_HEADER.match(header)
-    diff = FileDiff(path=match[2] if match else header.split(" b/")[-1], text=chunk)
-    hunk, line_no = -1, 0
+    path = match[2] if match else header.split(" b/")[-1]
+    diff = FileDiff(path=path, text=chunk, old_path=match[1] if match else path)
+    hunk, line_no, old_no = -1, 0, 0
     for line in body:
         if match := HUNK_HEADER.match(line):
-            hunk, line_no = hunk + 1, int(match[1])
+            hunk, old_no, line_no = hunk + 1, int(match[1]), int(match[2])
         elif hunk < 0:
             if line.startswith("+++ b/"):
                 diff.path = line[6:]
+            if line.startswith("--- a/"):
+                diff.old_path = line[6:]
             diff.binary |= line.startswith(("Binary files", "GIT binary patch"))
             diff.executable |= line.startswith(("new mode 1007", "new file mode 1007"))
             diff.new |= line.startswith(("new file mode", "--- /dev/null"))
             diff.deleted |= line.startswith(("deleted file mode", "+++ /dev/null"))
         elif line.startswith("-"):
             diff.removed.append(line[1:])
+            old_no += 1
         elif line.startswith(("+", " ")) or not line:
-            if line.startswith("+"):
+            added = line.startswith("+")
+            if added:
                 diff.added.append((line_no, line[1:]))
-            diff.lines[line_no] = (hunk, line[1:])
+            diff.lines[line_no] = (hunk, line[1:], old_no, added)
             line_no += 1
+            old_no += 0 if added else 1
     return diff
 
 
@@ -729,7 +997,7 @@ def render_meta(pr: dict | None, commits: list[dict], problems: list[str], statu
     out = []
     if pr:
         out += [
-            f"# {pr['ref'].repo}#{pr['ref'].number}: {pr['title']}",
+            f"# {pr['ref'].display}: {pr['title']}",
             f"- URL: {pr['url']}",
             f"- Author: @{pr['author']} ({pr['authorAssociation']})",
             f"- State: {pr['state']}, draft: {pr['isDraft']}",
@@ -870,6 +1138,28 @@ def remote_source(ref: PrRef) -> Source:
     )
 
 
+def gitlab_source(ref: MrRef) -> Source:
+    mr = fetch_mr(ref)
+    diff, gaps = mr_diff(mr)
+    files = parse_diff(diff)
+    mr["additions"] = sum(len(f.added) for f in files)
+    mr["deletions"] = sum(len(f.removed) for f in files)
+    head, base = mr["headRefOid"], mr["diffRefs"]["base_sha"]
+    return Source(
+        name=f"gitlab-{ref.host}-{ref.repo}-{ref.number}",
+        files=files,
+        commits=mr["commits"],
+        head=head,
+        read_blobs=lambda paths: {path: gitlab_file(ref, head, path) for path in paths},
+        read_base_blobs=lambda paths: {path: gitlab_file(ref, base, path) for path in paths},
+        pr=mr,
+        hunks=hunk_map(files),
+        postable=mr["state"] == "OPEN",
+        status="" if mr["state"] == "OPEN" else f"- MR is {mr['state']}, no posting",
+        gaps=gaps,
+    )
+
+
 # Tried in this order without --base or PR, upstream remotes first
 BASE_CANDIDATES = (
     "upstream/main", "origin/main", "main", "upstream/master", "origin/master", "master"
@@ -1003,7 +1293,10 @@ def write_docs(out: Path, read_base_blobs) -> None:
     Never the reviewed version: the PR must not change the rules it is judged by.
     """
     for path, text in read_base_blobs(list(DOC_PATHS)).items():
-        text = text or raw_file("kubevirt/kubevirt", "main", path)
+        if not text and gh_available():
+            text = raw_file("kubevirt/kubevirt", "main", path)
+        elif not text:
+            text = "(not in the review base, gh is needed for the kubevirt/kubevirt version)\n"
         write(out / path, text or "")
 
 
@@ -1020,6 +1313,10 @@ query($n: Int!) {
 
 def write_veps(out: Path, numbers: list[int]) -> None:
     if not numbers:
+        return
+    if not gh_available():
+        listed = ", ".join(f"#{n}" for n in numbers)
+        write(out / "vep.md", f"# Referenced VEPs\n\n{listed} not fetched, gh is unavailable.\n")
         return
     tree_url = "repos/kubevirt/enhancements/git/trees/main?recursive=1"
     tree = rest_get(tree_url, jq=".tree[].path").splitlines()
@@ -1057,14 +1354,22 @@ def analyze(out: Path, source: Source, force_full: str) -> tuple[Split, list[Hit
     return split, hits, hints
 
 
-def cmd_fetch(args: argparse.Namespace) -> None:
-    require_gh()
+def make_source(args: argparse.Namespace) -> Source:
     if args.local:
-        source = local_source(args.base)
-    elif args.pr:
-        source = remote_source(parse_pr_ref(args.pr))
-    else:
+        require_gh()
+        return local_source(args.base)
+    if not args.pr:
         raise Failure("fetch needs a PR reference or --local")
+    ref = parse_pr_ref(args.pr)
+    if isinstance(ref, MrRef):
+        require_glab(ref.host)
+        return gitlab_source(ref)
+    require_gh()
+    return remote_source(ref)
+
+
+def cmd_fetch(args: argparse.Namespace) -> None:
+    source = make_source(args)
     pr = source.pr
     out = prepare_dir(args.root, source.name)
     reason = full_diff_reason(args.no_split, pr and pr["authorAssociation"])
@@ -1085,6 +1390,10 @@ def cmd_fetch(args: argparse.Namespace) -> None:
     state = {
         "local": source.local,
         "repo": pr and pr["ref"].repo,
+        "host": pr and getattr(pr["ref"], "host", None),
+        "number": pr and pr["ref"].number,
+        "diff_refs": pr and pr.get("diffRefs"),
+        "old_paths": {f.path: f.old_path for f in source.files if f.old_path != f.path},
         "pr_id": pr and pr["id"],
         "url": pr and pr["url"],
         "head": source.head,
@@ -1121,10 +1430,19 @@ def load_state(directory: str) -> dict:
     return read_json(Path(directory) / "state.json", "run fetch first")
 
 
+def state_ref(state: dict) -> PrRef | MrRef:
+    """The fetched PR or MR, for MRs on the host the user gave, not the one in the URL."""
+    if state.get("host"):
+        return MrRef(state["host"], state["repo"], state["number"])
+    return parse_pr_ref(state["url"])
+
+
 def cmd_show(args: argparse.Namespace) -> None:
     state = load_state(args.dir)
     if state["local"]:
         text = local_blob(state["head"], args.path)
+    elif state.get("host"):
+        text = gitlab_file(state_ref(state), state["head"], args.path)
     else:
         # not blobs(), GraphQL truncates large files
         text = raw_file(state["repo"], state["head"], args.path)
@@ -1147,7 +1465,7 @@ def lint_body(body: str) -> list[str]:
 
 def find_line(lines: list[list], anchor: str, hint: int | None) -> tuple[int, int]:
     """Return (line, hunk) of the line containing anchor, raise Unresolved if unclear."""
-    found = [(n, hunk) for n, hunk, text in lines if anchor in text]
+    found = [(n, hunk) for n, hunk, text, *_ in lines if anchor in text]
     if not found:
         raise Unresolved(f"anchor {anchor!r} not found in the diff hunks of this file")
     if len(found) == 1:
@@ -1178,7 +1496,7 @@ def resolve_finding(finding: dict, hunks: dict) -> dict:
     if end_anchor := finding.get("end_anchor"):
         # a multi-line comment must stay in one diff hunk
         rest = [entry for entry in hunks[path] if entry[0] > line and entry[1] == hunk]
-        end = next((n for n, _, text in rest if end_anchor in text), None)
+        end = next((n for n, _, text, *_ in rest if end_anchor in text), None)
         if end is None:
             last = rest[-1][0] if rest else line
             raise Unresolved(
@@ -1241,8 +1559,16 @@ def cmd_post(args: argparse.Namespace) -> None:
     if not state["postable"]:
         raise Failure("this review cannot be posted, see the `no posting` line in meta.md")
     comments = read_json(Path(args.dir) / "resolved.json", "run resolve first")
+    ref = state_ref(state)
+    if isinstance(ref, MrRef):
+        post_gitlab(ref, state, comments)
+    else:
+        post_github(ref, state, comments)
+
+
+def post_github(ref: PrRef, state: dict, comments: list[dict]) -> None:
     require_gh()
-    pr = pr_info(parse_pr_ref(state["url"]))
+    pr = pr_info(ref)
     if pr["state"] != "OPEN":
         raise Failure(f"the PR is {pr['state']}, not posting")
     if pr["headRefOid"] != state["head"]:
@@ -1281,6 +1607,72 @@ def cmd_post(args: argparse.Namespace) -> None:
         raise Failure(f"{failed} of {len(comments)} comments could not be added")
 
 
+def line_point(path: str, line: int, entry: list) -> dict:
+    """A line of a GitLab multi-line range. Line codes use the next old line for added lines."""
+    _, _, _, old, added = entry
+    digest = hashlib.sha1(path.encode()).hexdigest()
+    point = {"line_code": f"{digest}_{old}_{line}", "type": "new" if added else "old"}
+    return point | {"new_line": line} | ({} if added else {"old_line": old})
+
+
+def draft_payload(comment: dict, state: dict) -> dict:
+    """A draft note on the MR diff for a resolved comment."""
+    path = comment["path"]
+    refs = state["diff_refs"]
+    position = {
+        "base_sha": refs["base_sha"],
+        "start_sha": refs["start_sha"],
+        "head_sha": refs["head_sha"],
+        "old_path": state["old_paths"].get(path, path),
+        "new_path": path,
+    }
+    if comment["subjectType"] == "FILE":
+        return {"note": comment["body"], "position": position | {"position_type": "file"}}
+    entries = {entry[0]: entry for entry in state["hunks"][path]}
+    line = comment["line"]
+    position |= {"position_type": "text", "new_line": line}
+    if not entries[line][4]:  # GitLab needs both lines for unchanged lines
+        position["old_line"] = entries[line][3]
+    if start := comment.get("startLine"):
+        position["line_range"] = {
+            "start": line_point(path, start, entries[start]),
+            "end": line_point(path, line, entries[line]),
+        }
+    return {"note": comment["body"], "position": position}
+
+
+def post_gitlab(ref: MrRef, state: dict, comments: list[dict]) -> None:
+    require_glab(ref.host)
+    mr = mr_info(ref)
+    if mr["state"] != "OPEN":
+        raise Failure(f"the MR is {mr['state']}, not posting")
+    if mr["headRefOid"] != state["head"]:
+        raise Failure("the MR head moved since fetch, fetch and review again")
+    if kept := len(mr["pending_comments"]):
+        print(f"adding to your {kept} existing draft notes, they stay untouched")
+    # skip comments a previous, partly failed post already added
+    pending = {(c["path"], c["line"], c["body"]) for c in mr["pending_comments"]}
+    added, failed = [], 0
+    for comment in comments:
+        target = where(comment["path"], comment.get("line"))
+        if (comment["path"], comment.get("line"), comment["body"]) in pending:
+            print(f"skipped {target}: already in your draft notes")
+            continue
+        try:
+            payload = draft_payload(comment, state)
+            added.append(gitlab_post_draft(ref.host, f"{ref.api}/draft_notes", payload)["id"])
+            print(f"added {target}")
+        except Failure as error:
+            failed += 1
+            print(f"FAILED {target}: {error}")
+    drafts = {draft["id"] for draft in gitlab_pages(ref.host, f"{ref.api}/draft_notes")}
+    if gone := [note for note in added if note not in drafts]:
+        raise Failure(f"{len(gone)} added draft notes are no longer drafts, check the MR")
+    print(f"draft notes are pending, submit them yourself with Submit review at {state['url']}")
+    if failed:
+        raise Failure(f"{failed} of {len(comments)} comments could not be added")
+
+
 def line_range(value: str) -> tuple[int, int]:
     match = re.fullmatch(r"(\d+)(?:-(\d+))?", value)
     if not match:
@@ -1293,7 +1685,9 @@ def main(argv: list[str] | None = None) -> int:
     commands = parser.add_subparsers(dest="command", required=True)
 
     fetch = commands.add_parser("fetch", help="collect review data into files")
-    fetch.add_argument("pr", nargs="?", help="123, owner/repo#123 or PR URL")
+    fetch.add_argument(
+        "pr", nargs="?", help="123, owner/repo#123, group/project!123, or a PR or MR URL"
+    )
     fetch.add_argument("--local", action="store_true", help="review the local branch")
     fetch.add_argument(
         "--base", help="base for --local (default: PR merge base, else newest main/master)"

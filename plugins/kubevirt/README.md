@@ -17,14 +17,14 @@ Review local branch changes using KubeVirt project coding conventions and review
 
 #### `/kubevirt:review-pr`
 
-Review a GitHub pull request using the `gh` CLI, applying KubeVirt project coding conventions and reviewer guidelines. Fetches PR diff, metadata, commit history, and existing discussion directly from GitHub without requiring a local checkout. Optionally adds inline comments to a pending review, which you submit yourself.
+Review a GitHub pull request (via `gh`) or a GitLab merge request (via `glab`, also on self-hosted instances), applying KubeVirt project coding conventions and reviewer guidelines. Fetches the diff, metadata, commit history, and existing discussion without requiring a local checkout. Optionally adds inline comments to a pending GitHub review or as GitLab draft notes, which you submit yourself.
 
 **Usage:**
 ```bash
-/kubevirt:review-pr <pr-number-or-url>
+/kubevirt:review-pr <pr-or-mr-number-or-url>
 ```
 
-Both review commands use the `review-workflow` skill and its `review_helper.py` (needs `python3` and an authenticated `gh`). The helper never submits a review. To also stop the agent from submitting one by itself, you can add deny rules, e.g. in Claude Code settings. The helper runs `gh` itself, so they do not affect it. The `graphql` rule also covers the GraphQL submit mutations, at the cost of the skill's manual fallback:
+Both review commands use the `review-workflow` skill and its `review_helper.py` (needs `python3` and an authenticated `gh`, or `glab` for GitLab MRs; with `gh` also available, GitLab reviews get the VEP lookup and the kubevirt/kubevirt docs fallback). The helper never submits a review or publishes draft notes. To also stop the agent from submitting one by itself, you can add deny rules, e.g. in Claude Code settings. The helper runs `gh` itself, so they do not affect it. The `graphql` rule also covers the GraphQL submit mutations, at the cost of the skill's manual fallback:
 
 ```json
 {
@@ -33,6 +33,8 @@ Both review commands use the `review-workflow` skill and its `review_helper.py` 
   }
 }
 ```
+
+For GitLab, similar rules are `Bash(glab mr note *)`, `Bash(glab mr approve *)` and `Bash(glab api *publish*)`.
 
 #### `/kubevirt:lint`
 
@@ -97,6 +99,13 @@ Review a VEP proposal PR against template requirements, process guidelines, and 
 /kubevirt:review-pr https://github.com/kubevirt/kubevirt/pull/12345
 ```
 After the report, agree to add the comments, then submit the pending review on GitHub.
+
+### Reviewing a GitLab MR
+```bash
+/kubevirt:review-pr https://gitlab.example.com/group/project/-/merge_requests/42
+/kubevirt:review-pr group/project!42
+```
+The short form uses glab's default host (`GITLAB_HOST` or `glab config get host`). Comments are added as draft notes, submit them with "Submit review" on the MR.
 
 ### Reviewing changes before submitting a PR
 ```bash

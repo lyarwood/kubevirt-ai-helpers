@@ -62,9 +62,10 @@ class ParseDiff(unittest.TestCase):
 
     def test_line_numbers_skip_removed_lines(self):
         (f,) = rh.parse_diff(MODIFIED)
-        self.assertEqual(f.lines[11], (0, "\tb := 3"))
-        self.assertEqual(f.lines[12], (0, "\treturn a + b"))
-        self.assertEqual(f.lines[41], (1, "\t\treturn err"))
+        self.assertEqual(f.lines[11], (0, "\tb := 3", 12, True))
+        self.assertEqual(f.lines[12], (0, "\treturn a + b", 12, False))
+        self.assertEqual(f.lines[41], (1, "\t\treturn err", 41, True))
+        self.assertEqual(f.lines[42], (1, "\t}", 41, False))
         self.assertNotIn(43, f.lines)
         self.assertEqual(f.removed, ["\tb := 2"])
 
@@ -82,7 +83,8 @@ class ParseDiff(unittest.TestCase):
             "diff --git a/a.go b/b.go\nsimilarity index 90%\nrename from a.go\n"
             "rename to b.go\n--- a/a.go\n+++ b/b.go\n@@ -1 +1 @@\n-x\n+y\n"
         )
-        self.assertEqual(rh.parse_diff(text)[0].path, "b.go")
+        (f,) = rh.parse_diff(text)
+        self.assertEqual((f.path, f.old_path), ("b.go", "a.go"))
 
     def test_deleted_without_mode_line(self):
         text = "diff --git a/old.go b/old.go\n--- a/old.go\n+++ /dev/null\n@@ -1 +0,0 @@\n-x\n"
@@ -618,6 +620,289 @@ class OutputDir(unittest.TestCase):
             out = rh.prepare_dir(None, "o/r#1")
         self.assertEqual(out.parent.stat().st_mode & 0o777, 0o700)
         self.assertEqual(out.name, "o-r-1")
+
+
+MR = rh.MrRef("gitlab.example.com", "group/sub/project", 7)
+API = "projects/group%2Fsub%2Fproject/merge_requests/7"
+DIFF_REFS = {"base_sha": "base", "start_sha": "start", "head_sha": "abc"}
+
+
+class GitLabRefs(unittest.TestCase):
+    def test_url_with_subgroups_on_any_host(self):
+        url = "https://gitlab.example.com/group/sub/project/-/merge_requests/7/diffs"
+        self.assertEqual(rh.parse_pr_ref(url), MR)
+        self.assertEqual(MR.api, API)
+        self.assertEqual(MR.display, "group/sub/project!7")
+
+    def test_short_ref_uses_default_host(self):
+        with mock.patch.dict(os.environ, {"GITLAB_HOST": "https://gitlab.example.com/"}):
+            self.assertEqual(rh.parse_pr_ref("group/sub/project!7"), MR)
+
+    def test_github_refs_unchanged(self):
+        self.assertEqual(rh.parse_pr_ref("123"), rh.PrRef("kubevirt", "kubevirt", 123))
+        self.assertEqual(rh.parse_pr_ref("o/r#5"), rh.PrRef("o", "r", 5))
+        url = "https://github.com/o/r/pull/5"
+        self.assertEqual(rh.parse_pr_ref(url), rh.PrRef("o", "r", 5))
+
+
+class NeverPublish(unittest.TestCase):
+    def test_only_draft_notes_can_be_created(self):
+        with mock.patch.object(rh, "glab", return_value='{"id": 1}') as glab:
+            rh.gitlab_post_draft("h", f"{API}/draft_notes", {"note": "x"})
+            for endpoint in (
+                f"{API}/draft_notes/bulk_publish",
+                f"{API}/draft_notes/1/publish",
+                f"{API}/notes",
+                f"{API}/approve",
+                f"{API}/draft_notes?x=1",
+            ):
+                with self.assertRaises(rh.Failure):
+                    rh.gitlab_post_draft("h", endpoint, {"note": "x"})
+        self.assertEqual(glab.call_count, 1)
+
+    def test_get_is_get_only(self):
+        with mock.patch.object(rh, "glab", return_value="[]") as glab:
+            rh.gitlab_get("h", API)
+        self.assertEqual(glab.call_args.args, ("api", "--hostname", "h", "--method", "GET", API))
+
+    def test_pages_until_short_page(self):
+        pages = [list(range(100)), [100]]
+        with mock.patch.object(rh, "gitlab_get", side_effect=pages) as get:
+            self.assertEqual(len(rh.gitlab_pages("h", f"{API}/diffs")), 101)
+        self.assertTrue(get.call_args.args[1].endswith("/diffs?per_page=100&page=2"))
+
+
+def mr_item(path, diff="", **flags):
+    item = {
+        "old_path": path,
+        "new_path": path,
+        "a_mode": "100644",
+        "b_mode": "100644",
+        "new_file": False,
+        "renamed_file": False,
+        "deleted_file": False,
+        "diff": diff,
+    }
+    return item | flags
+
+
+class MrDiff(unittest.TestCase):
+    def mr_diff(self, items, sha="abc", expected="4"):
+        mr = {"ref": MR, "headRefOid": "abc", "changedFiles": expected}
+        patch_pages = mock.patch.object(rh, "gitlab_pages", return_value=items)
+        patch_get = mock.patch.object(rh, "gitlab_get", return_value={"sha": sha})
+        with patch_pages, patch_get:
+            return rh.mr_diff(mr)
+
+    def test_builds_git_diff(self):
+        items = [
+            mr_item("a.go", "@@ -1 +1 @@\n-a\n+b"),
+            mr_item("run", "@@ -0,0 +1 @@\n+x\n", new_file=True, a_mode="0", b_mode="100755"),
+            mr_item("d.go", "@@ -1 +0,0 @@\n-x\n", deleted_file=True, b_mode="0"),
+            mr_item("n.go", renamed_file=True, old_path="o.go"),
+            mr_item("big.go", too_large=True),
+        ]
+        diff, gaps = self.mr_diff(items, expected="6")
+        files = rh.parse_diff(diff)
+        self.assertEqual([f.path for f in files], ["a.go", "run", "d.go", "n.go", "big.go"])
+        self.assertEqual(files[0].added, [(1, "b")])
+        self.assertTrue(files[1].new and files[1].executable)
+        self.assertTrue(files[2].deleted)
+        self.assertEqual(files[3].old_path, "o.go")
+        self.assertEqual(
+            gaps,
+            [
+                "1 of 6 changed files missing",
+                "big.go: no diff from GitLab (binary, too large or collapsed)",
+            ],
+        )
+
+    def test_capped_file_count_is_a_gap(self):
+        _, gaps = self.mr_diff([mr_item("a.go", "@@ -1 +1 @@\n-a\n+b")], expected="1000+")
+        self.assertEqual(gaps, ["GitLab reports 1000+ changed files, the diff may be incomplete"])
+
+    def test_mode_change_is_no_gap(self):
+        items = [mr_item("x.sh", b_mode="100755")]
+        diff, gaps = self.mr_diff(items, expected="1")
+        self.assertEqual(gaps, [])
+        self.assertTrue(rh.parse_diff(diff)[0].executable)
+
+    def test_refuses_when_head_moved_during_fetch(self):
+        with self.assertRaises(rh.Failure):
+            self.mr_diff([], sha="def")
+
+
+def gl_note(body, username="alice", system=False, **extra):
+    return {"author": {"username": username}, "body": body, "system": system} | extra
+
+
+class MrData(unittest.TestCase):
+    def test_threads_and_comments(self):
+        position = {"new_path": "a.go", "old_path": "a.go", "new_line": 3, "old_line": None}
+        discussions = [
+            {"notes": [gl_note("assigned to @bob", system=True)]},
+            {"notes": [gl_note("Looks good"), gl_note("/approve", username="bob")]},
+            {
+                "notes": [
+                    gl_note("Why?", position=position | {"head_sha": "old"}, resolvable=True),
+                    gl_note("Fixed", username="review-bot", resolvable=True, resolved=True),
+                ]
+            },
+        ]
+        threads, comments = rh.mr_threads(discussions, "abc")
+        self.assertEqual([c["body"] for c in comments], ["Looks good", "/approve"])
+        (thread,) = threads
+        self.assertEqual((thread["path"], thread["line"]), ("a.go", 3))
+        self.assertTrue(thread["isOutdated"])
+        self.assertFalse(thread["isResolved"])
+        self.assertTrue(rh.is_bot(thread["comments"]["nodes"][1]["author"]))
+        pr = {"pending_comments": [], "reviewThreads": threads, "comments": comments}
+        text = rh.render_discussion(pr | {"reviews": []})
+        self.assertIn("[open, outdated L3]", text)
+        self.assertNotIn("/approve", text)
+
+    def test_mr_info(self):
+        mr = {
+            "id": 1,
+            "web_url": "https://gitlab.example.com/group/sub/project/-/merge_requests/7",
+            "title": "t",
+            "description": None,
+            "state": "opened",
+            "draft": False,
+            "author": {"username": "alice"},
+            "first_contribution": True,
+            "target_branch": "main",
+            "source_branch": "feature",
+            "sha": "abc",
+            "diff_refs": DIFF_REFS,
+            "changes_count": "2",
+            "labels": ["x"],
+        }
+        draft = {"id": 5, "note": "n", "position": {"new_path": "a.go", "new_line": 3}}
+        patch_get = mock.patch.object(rh, "gitlab_get", return_value=mr)
+        with patch_get, mock.patch.object(rh, "gitlab_pages", return_value=[draft]):
+            info = rh.mr_info(MR)
+        self.assertEqual(info["state"], "OPEN")
+        self.assertEqual(
+            rh.full_diff_reason(False, info["authorAssociation"]),
+            ("no split for FIRST_TIMER author"),
+        )
+        self.assertEqual(
+            info["pending_comments"],
+            [{"path": "a.go", "line": 3, "originalLine": None, "body": "n"}],
+        )
+        self.assertIn(
+            "group/sub/project!7: t",
+            rh.render_meta(info | {"additions": 1, "deletions": 0}, [], [], ""),
+        )
+
+
+GL_HUNKS = rh.hunk_map(rh.parse_diff(MODIFIED.replace("pkg/mod.go", "a.go")))
+
+
+class PostGitLab(unittest.TestCase):
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        state = {
+            "local": False,
+            "pr_id": 1,
+            "head": "abc",
+            "postable": True,
+            "url": "https://gitlab.example.com/group/sub/project/-/merge_requests/7",
+            "host": "gitlab.example.com",
+            "repo": "group/sub/project",
+            "number": 7,
+            "diff_refs": DIFF_REFS,
+            "old_paths": {},
+            "hunks": GL_HUNKS,
+        }
+        (self.dir / "state.json").write_text(json.dumps(state))
+        self.state = state
+        patcher = mock.patch.object(rh, "require_glab")
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def post(self, comments, head="abc", state="OPEN", drafts=(), keep=True):
+        (self.dir / "resolved.json").write_text(json.dumps(comments))
+        posted = []
+
+        def post_draft(host, endpoint, payload):
+            self.assertEqual(endpoint, f"{API}/draft_notes")
+            posted.append(payload)
+            return {"id": 100 + len(posted)}
+
+        def pages(host, endpoint):
+            return [{"id": 100 + n} for n in range(1, len(posted) + 1)] if keep else []
+
+        info = {
+            "headRefOid": head,
+            "state": state,
+            "pending_comments": list(drafts),
+        }
+        patches = (
+            mock.patch.object(rh, "mr_info", return_value=info),
+            mock.patch.object(rh, "gitlab_post_draft", side_effect=post_draft),
+            mock.patch.object(rh, "gitlab_pages", side_effect=pages),
+        )
+        with patches[0], patches[1], patches[2], redirect_stdout(io.StringIO()):
+            rh.cmd_post(Namespace(dir=str(self.dir)))
+        return posted
+
+    def test_positions(self):
+        comments = [
+            {"path": "a.go", "subjectType": "LINE", "line": 11, "body": "added"},
+            {"path": "a.go", "subjectType": "LINE", "line": 12, "body": "context"},
+            {"path": "a.go", "subjectType": "LINE", "startLine": 10, "line": 11, "body": "m"},
+            {"path": "a.go", "subjectType": "FILE", "body": "file"},
+        ]
+        added, context, multi, file = (p["position"] for p in self.post(comments))
+        base = {"base_sha": "base", "start_sha": "start", "head_sha": "abc"}
+        self.assertEqual(added, base | {
+            "old_path": "a.go", "new_path": "a.go", "position_type": "text", "new_line": 11,
+        })  # fmt: skip
+        self.assertEqual((context["new_line"], context["old_line"]), (12, 12))
+        digest = rh.hashlib.sha1(b"a.go").hexdigest()
+        self.assertEqual(multi["line_range"], {
+            "start": {
+                "line_code": f"{digest}_10_10", "type": "old", "new_line": 10, "old_line": 10
+            },
+            "end": {"line_code": f"{digest}_12_11", "type": "new", "new_line": 11},
+        })  # fmt: skip
+        self.assertEqual(file["position_type"], "file")
+        self.assertNotIn("new_line", file)
+
+    def test_uses_fetched_host_not_url_host(self):
+        state = self.state | {
+            "url": "https://canonical.example.com/group/sub/project/-/merge_requests/7"
+        }
+        self.assertEqual(rh.state_ref(state), MR)
+
+    def test_skips_existing_drafts(self):
+        comment = {"path": "a.go", "subjectType": "LINE", "line": 11, "body": "x"}
+        existing = {"path": "a.go", "line": 11, "originalLine": None, "body": "x"}
+        self.assertEqual(self.post([comment], drafts=[existing]), [])
+
+    def test_refuses_moved_head_and_closed_mr(self):
+        comment = [{"path": "a.go", "subjectType": "LINE", "line": 11, "body": "x"}]
+        for kwargs in ({"head": "def"}, {"state": "MERGED"}):
+            with self.assertRaises(rh.Failure):
+                self.post(comment, **kwargs)
+
+    def test_fails_when_drafts_vanished(self):
+        comment = [{"path": "a.go", "subjectType": "LINE", "line": 11, "body": "x"}]
+        with self.assertRaises(rh.Failure):
+            self.post(comment, keep=False)
+
+
+class GitHubExtras(unittest.TestCase):
+    def test_skipped_without_gh(self):
+        out = Path(tempfile.mkdtemp())
+        (out / "docs").mkdir()
+        with mock.patch.object(rh, "gh_available", return_value=False):
+            rh.write_veps(out, [42])
+            rh.write_docs(out, lambda paths: dict.fromkeys(paths))
+        self.assertIn("#42 not fetched", (out / "vep.md").read_text())
+        self.assertIn("gh is needed", (out / "docs/reviewer-guide.md").read_text())
 
 
 if __name__ == "__main__":
