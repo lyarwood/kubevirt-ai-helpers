@@ -71,7 +71,7 @@ When a PR is detected, the report also includes:
 - `[base-branch]`: (Optional) Branch to compare against. Defaults to the merge base of the branch's PR, otherwise the most recent of `upstream/main`, `origin/main` and `main` (then the same for `master`).
 
 ## See Also
-- `/kubevirt:review-pr` - Review a remote GitHub PR by number or URL (no local checkout required)
+- `/kubevirt:review-pr` - Review a remote GitHub PR or GitLab MR by number or URL (no local checkout required)
 - `/kubevirt:lint` - Lint a path and generate a plan to fix issues
 - KubeVirt [Coding Conventions](https://github.com/kubevirt/kubevirt/blob/main/docs/coding-conventions.md)
 - KubeVirt [Reviewer Guide](https://github.com/kubevirt/kubevirt/blob/main/docs/reviewer-guide.md)

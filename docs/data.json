@@ -21,7 +21,7 @@
     {
       "name": "kubevirt",
       "description": "Core KubeVirt workflows for code review, linting, CI analysis, and VEP management",
-      "version": "1.11.0",
+      "version": "1.12.0",
       "commands": [
         {
           "name": "ci-health",
@@ -85,9 +85,9 @@
         },
         {
           "name": "review-pr",
-          "description": "Review a GitHub PR using gh CLI, applying KubeVirt project best practices",
-          "synopsis": "/kubevirt:review-pr <pr-number-or-url>",
-          "argument_hint": "<pr-number-or-url>"
+          "description": "Review a GitHub PR or GitLab MR using gh or glab, applying KubeVirt project best practices",
+          "synopsis": "/kubevirt:review-pr <pr-or-mr-number-or-url>",
+          "argument_hint": "<pr-or-mr-number-or-url>"
         },
         {
           "name": "review",
@@ -140,7 +140,7 @@
         {
           "name": "review-workflow",
           "id": "review-workflow",
-          "description": "Shared review checklist, conventions, helper workflow and posting rules. Use when running /kubevirt:review or /kubevirt:review-pr to review KubeVirt code changes."
+          "description": "Shared review checklist, conventions, helper workflow and posting rules. Use when running /kubevirt:review or /kubevirt:review-pr to review KubeVirt code changes in GitHub PRs or GitLab MRs."
         },
         {
           "name": "vep-find-reviewers-workflow",

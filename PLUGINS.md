@@ -16,7 +16,7 @@ See [plugins/hello-world/README.md](plugins/hello-world/README.md) for detailed 
 
 ### Kubevirt Plugin
 
-KubeVirt development workflows for code review, PR review, linting, CI analysis, and enhancement proposals (VEPs)
+KubeVirt development workflows for code review, GitHub PR and GitLab MR review, linting, CI analysis, and enhancement proposals (VEPs)
 
 **Commands:**
 - **`/kubevirt:ci-health` `"[category] [--since <period>]"`** - Analyze overall CI health across merge-time jobs with failure trending
@@ -29,7 +29,7 @@ KubeVirt development workflows for code review, PR review, linting, CI analysis,
 - **`/kubevirt:review-ci` `<pr-number-or-url>`** - Review CI failures for a given PR and provide analysis with remediation suggestions
 - **`/kubevirt:review-enhancement` `"<pr-number-or-url | vep-number>"`** - Review a KubeVirt enhancement proposal (VEP) PR for process compliance, technical quality, and accuracy against its implementation
 - **`/kubevirt:review-list` `"[username] [--sig <sig>] [--repo <repo>] [--limit <n>] [--order-by <field>]"`** - List open PRs pending your review, filterable by user, SIG, or repo
-- **`/kubevirt:review-pr` `<pr-number-or-url>`** - Review a GitHub PR using gh CLI, applying KubeVirt project best practices
+- **`/kubevirt:review-pr` `<pr-or-mr-number-or-url>`** - Review a GitHub PR or GitLab MR using gh or glab, applying KubeVirt project best practices
 - **`/kubevirt:review` `[base-branch]`** - Review local branch changes using KubeVirt project best practices
 - **`/kubevirt:vep-find-reviewers` `<vep-number-or-sig> [--repo <repo>] [--months <n>]`** - Find potential reviewers for a VEP based on SIG ownership and recent code activity
 - **`/kubevirt:vep-groom` `<vep-pr-number>`** - Review a VEP proposal against template requirements and process guidelines
